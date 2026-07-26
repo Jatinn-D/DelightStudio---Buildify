@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Delight Studio — Design System
+   Primary: Burgundy #6B2138 (from Brand Discovery questionnaire)
+   Base: dull warm cream · accents: taupe / soft gold
+   ============================================================ */
+@theme {
+  --color-burgundy: #6b2138;
+  --color-burgundy-deep: #4e1729;
+  --color-burgundy-900: #3d1220;
+  --color-cream: #f3ece0;
+  --color-cream-soft: #faf6ef;
+  --color-taupe: #c9b79c;
+  --color-taupe-soft: #e5dccd;
+  --color-gold: #b08d57;
+  --color-ink: #241c1a;
+
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-nav: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --animate-marquee: marquee 32s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+:root {
+  --background: var(--color-cream);
+  --foreground: var(--color-ink);
+}
+
+/* Smoothness is handled by Lenis (see components/SmoothScroll.tsx). */
+
+/* Slim, barely-there burgundy scrollbar */
+html {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, var(--color-burgundy) 80%, transparent) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-burgundy) 75%, transparent);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-burgundy);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* Guard against the .full-bleed (100vw) sections introducing a horizontal scrollbar. */
+  overflow-x: hidden;
+}
+
+/* Full-bleed helper: break an element out of its centered container
+   so it spans the full viewport width, edge to edge. */
+.full-bleed {
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Hide scrollbar for horizontal product rails while keeping scroll. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Nav link underline: grows from the center on hover, retracts to the center on leave.
+   transform-origin:center gives the center-out grow / ends-in retract for free.
+   currentColor keeps it correct over both navbar states (white over hero, ink on scroll). */
+.nav-underline {
+  position: relative;
+}
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  left: -0.4rem; /* slight overshoot past the text on both sides */
+  right: -0.4rem;
+  bottom: -0.35rem;
+  height: 0.5px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-underline:hover::after,
+.nav-underline:focus-visible::after {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-underline::after {
+    transition-duration: 0.01ms;
+  }
+}
