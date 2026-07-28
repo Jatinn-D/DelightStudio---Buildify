@@ -112,3 +112,23 @@ body {
     transition-duration: 0.01ms;
   }
 }
+
+/* Search modal: a centered box that settles down + scales in.
+   Animating only transform + opacity keeps it GPU-composited = buttery smooth in
+   both directions (clip-path janked the main thread). */
+.search-panel {
+  transform-origin: center top;
+  transform: translateY(-10px) scale(0.97);
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease-out;
+}
+.search-panel[data-open="true"] {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-panel {
+    transition: none;
+  }
+}

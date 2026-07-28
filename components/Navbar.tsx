@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus } from "lucide-react";
 import { navCategories, brand } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
+import SearchOverlay from "./SearchOverlay";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Toggle the solid (scrolled) vs transparent (over-hero) treatment.
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function Navbar() {
     "grid h-9 w-9 place-items-center rounded-full transition hover:opacity-60";
 
   return (
+    <>
     <header className="fixed inset-x-0 top-0 z-50">
       <AnnouncementBar collapsed={scrolled} />
 
@@ -40,7 +43,7 @@ export default function Navbar() {
         onMouseLeave={() => setOpenMenu(null)}
         className={`relative transition-colors duration-300 ${
           solid
-            ? "bg-cream-soft/90 text-ink shadow-[0_2px_24px_rgba(61,18,32,0.08)] backdrop-blur"
+            ? "bg-cream-soft/98 text-ink shadow-[0_2px_24px_rgba(61,18,32,0.08)] backdrop-blur"
             : "text-cream"
         }`}
       >
@@ -70,7 +73,11 @@ export default function Navbar() {
             </Link>
 
             <div className="flex items-center justify-end gap-1 sm:gap-2 lg:justify-self-end">
-              <button aria-label="Search" className={`${iconBtn} hidden sm:grid`}>
+              <button
+                aria-label="Search"
+                onClick={() => setSearchOpen((v) => !v)}
+                className={`${iconBtn} hidden sm:grid`}
+              >
                 <Search className="h-4.5 w-4.5" />
               </button>
               <Link href="/login" aria-label="Account" className={iconBtn}>
@@ -115,7 +122,7 @@ export default function Navbar() {
             <div
               key={cat.label}
               onMouseEnter={() => setOpenMenu(cat.label)}
-              className="absolute inset-x-0 top-full hidden border-t border-taupe/40 bg-cream-soft/90 text-ink shadow-[0_20px_40px_rgba(61,18,32,0.12)] lg:block"
+              className="absolute inset-x-0 top-full hidden border-t border-taupe/40 bg-cream-soft/98 text-ink shadow-[0_20px_40px_rgba(61,18,32,0.12)] lg:block"
             >
               <div className="mx-auto grid max-w-360 grid-cols-[repeat(2,minmax(0,220px))_1fr] gap-10 px-8 py-8">
                 {cat.columns.map((col, i) => (
@@ -179,6 +186,19 @@ export default function Navbar() {
           </div>
 
           <nav className="flex-1 overflow-y-auto px-5 py-4">
+            {/* Search trigger — opens the same panel on phones */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                setSearchOpen(true);
+              }}
+              className="mb-3 flex w-full items-center gap-3 rounded-full border border-taupe/50 px-4 py-3 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
+            >
+              <Search className="h-4.5 w-4.5 shrink-0" />
+              Search for kurtas, gowns…
+            </button>
+
             <ul className="divide-y divide-taupe/30">
               {navCategories.map((cat) => (
                 <li key={cat.label} className="py-1">
@@ -239,5 +259,8 @@ export default function Navbar() {
         </aside>
       </div>
     </header>
+
+    <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 }
