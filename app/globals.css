@@ -39,11 +39,15 @@
 
 /* Smoothness is handled by Lenis (see components/SmoothScroll.tsx). */
 
-/* Slim, barely-there burgundy scrollbar */
+/* Landing page: no visible scrollbar (Lenis handles the smooth scroll). Inner
+   scroll panels — cart, search, product rails — keep their slim burgundy bar. */
 html {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: color-mix(in srgb, var(--color-burgundy) 80%, transparent) transparent;
+  scrollbar-width: none; /* Firefox */
 }
+html::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / Edge */
+}
+/* Slim, barely-there burgundy scrollbar for inner scroll containers */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -129,6 +133,43 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .search-panel {
+    transition: none;
+  }
+}
+
+/* Filter dropdown: a small popover that drops from the filter button (top-right
+   origin). Transform + opacity only, so it stays GPU-composited like the panel. */
+.filter-popover {
+  transform-origin: top right;
+  transform: translateY(-6px) scale(0.96);
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease-out;
+}
+.filter-popover[data-open="true"] {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .filter-popover {
+    transition: none;
+  }
+}
+
+/* Cart drawer: sits off-screen to the right, then slides left into view on open
+   (and right back out on close). Driving the raw `transform` here — rather than
+   Tailwind's translate-x utilities, which set the separate `translate` property —
+   keeps it a single GPU-composited transition that actually glides both ways. */
+.cart-panel {
+  transform: translateX(100%);
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cart-panel[data-open="true"] {
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-panel {
     transition: none;
   }
 }

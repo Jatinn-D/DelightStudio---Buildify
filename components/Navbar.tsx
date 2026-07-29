@@ -6,6 +6,7 @@ import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus } from "lu
 import { navCategories, brand } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
+import CartDrawer, { initialCart, type CartLine } from "./CartDrawer";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -13,6 +14,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cart, setCart] = useState<CartLine[]>(initialCart);
 
   // Toggle the solid (scrolled) vs transparent (over-hero) treatment.
   useEffect(() => {
@@ -31,6 +34,7 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   const solid = scrolled || openMenu !== null;
+  const cartCount = cart.reduce((n, l) => n + l.qty, 0);
   const iconBtn =
     "grid h-9 w-9 place-items-center rounded-full transition hover:opacity-60";
 
@@ -86,11 +90,17 @@ export default function Navbar() {
               <button aria-label="Wishlist" className={`${iconBtn} hidden sm:grid`}>
                 <Heart className="h-4.5 w-4.5" />
               </button>
-              <button aria-label="Cart" className={`${iconBtn} relative`}>
+              <button
+                aria-label="Cart"
+                onClick={() => setCartOpen(true)}
+                className={`${iconBtn} relative`}
+              >
                 <ShoppingBag className="h-4.5 w-4.5" />
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-burgundy text-[10px] font-semibold text-cream">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
+                    {cartCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -261,6 +271,12 @@ export default function Navbar() {
     </header>
 
     <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+    <CartDrawer
+      open={cartOpen}
+      onClose={() => setCartOpen(false)}
+      items={cart}
+      onItemsChange={setCart}
+    />
     </>
   );
 }

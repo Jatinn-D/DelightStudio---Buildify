@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useLenis } from "lenis/react";
 import { newArrivals } from "@/lib/data";
 
@@ -11,6 +11,24 @@ const RECENT_KEY = "ds-recent-searches";
 const MAX_RECENT = 8;
 const POPULAR = ["Kurta", "Anarkali", "Kurta Sets", "Nighty", "Bottomwear"];
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+type SortValue = "featured" | "price-asc" | "price-desc" | "newest";
+type PriceValue = "all" | "u2000" | "2000-3500" | "o3500";
+
+const SORT_OPTIONS: { value: SortValue; label: string }[] = [
+  { value: "featured", label: "Featured" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "newest", label: "Newest" },
+];
+const PRICE_OPTIONS: { value: PriceValue; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "u2000", label: "Under ₹2,000" },
+  { value: "2000-3500", label: "₹2,000–3,500" },
+  { value: "o3500", label: "Above ₹3,500" },
+];
+/* Derived once from the data so it stays in sync with lib/data.ts. */
+const CATEGORIES = Array.from(new Set(newArrivals.map((p) => p.category)));
 
 export default function SearchOverlay({
   open,
@@ -21,7 +39,12 @@ export default function SearchOverlay({
 }) {
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sort, setSort] = useState<SortValue>("featured");
+  const [priceRange, setPriceRange] = useState<PriceValue>("all");
+  const [category, setCategory] = useState<string>("all");
   const inputRef = useRef<HTMLInputElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
   const lenis = useLenis();
 
   /* ---- load recent searches from localStorage once, deferred out of the
@@ -55,15 +78,31 @@ export default function SearchOverlay({
     };
   }, [open, lenis]);
 
-  /* ---- Esc to close ---- */
+  /* ---- Esc: close the filter popover first if it's open, else the search.
+         (When we reach the else branch the popover is already closed, so no
+         extra reset is needed here.) ---- */
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (filterOpen) setFilterOpen(false);
+      else onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, filterOpen, onClose]);
+
+  /* ---- click outside the filter popover closes just the popover ---- */
+  useEffect(() => {
+    if (!filterOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [filterOpen]);
 
   const persist = (list: string[]) => {
     setRecent(list);
@@ -85,9 +124,47 @@ export default function SearchOverlay({
     setQuery("");
     inputRef.current?.focus();
   };
+  const resetFilters = () => {
+    setSort("featured");
+    setPriceRange("all");
+    setCategory("all");
+  };
+  /* single close path — also tidies the popover so it never lingers on reopen */
+  const closeSearch = () => {
+    setFilterOpen(false);
+    onClose();
+  };
+
+  const inBucket = (price: number) => {
+    switch (priceRange) {
+      case "u2000":
+        return price < 2000;
+      case "2000-3500":
+        return price >= 2000 && price <= 3500;
+      case "o3500":
+        return price > 3500;
+      default:
+        return true;
+    }
+  };
 
   const q = query.trim().toLowerCase();
-  const results = q ? newArrivals.filter((p) => p.name.toLowerCase().includes(q)) : newArrivals;
+  let results = newArrivals.filter((p) => {
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    if (category !== "all" && p.category !== category) return false;
+    if (!inBucket(p.price)) return false;
+    return true;
+  });
+  if (sort === "price-asc") results = [...results].sort((a, b) => a.price - b.price);
+  else if (sort === "price-desc") results = [...results].sort((a, b) => b.price - a.price);
+  else if (sort === "newest")
+    results = [...results].sort(
+      (a, b) => (b.tag === "New" ? 1 : 0) - (a.tag === "New" ? 1 : 0),
+    );
+
+  const filtersActive =
+    (sort !== "featured" ? 1 : 0) + (priceRange !== "all" ? 1 : 0) + (category !== "all" ? 1 : 0);
+  const showingResults = Boolean(q) || filtersActive > 0;
 
   return (
     <div
@@ -100,7 +177,7 @@ export default function SearchOverlay({
       {/* Click-catcher backdrop — click to close */}
       <div
         aria-hidden
-        onClick={onClose}
+        onClick={closeSearch}
         className={`absolute inset-0 bg-transparent transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0"
         }`}
@@ -115,8 +192,8 @@ export default function SearchOverlay({
         aria-label="Search"
         className="search-panel relative flex max-h-[84vh] w-full flex-col overflow-hidden rounded-md bg-cream-soft text-ink shadow-[0_24px_70px_rgba(61,18,32,0.28)] ring-1 ring-taupe/30 sm:w-4/5 lg:w-3/5"
       >
-        {/* Sticky search header */}
-        <div className="shrink-0 border-b border-taupe/30 px-4 py-4 sm:px-6">
+        {/* Sticky search header (raised above the body so the popover overlays it) */}
+        <div className="relative z-30 shrink-0 border-b border-taupe/30 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex flex-1 items-center gap-2.5 rounded-full border border-taupe/50 bg-cream px-4 py-2.5 transition-colors focus-within:border-burgundy">
               <Search className="h-5 w-5 shrink-0 text-burgundy" />
@@ -143,11 +220,144 @@ export default function SearchOverlay({
                 </button>
               )}
             </div>
+
+            {/* Filter & sort — toggles the popover below */}
+            <div ref={filterRef} className="relative">
+              <button
+                type="button"
+                aria-label="Filter and sort"
+                aria-expanded={filterOpen}
+                onClick={() => setFilterOpen((v) => !v)}
+                className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${
+                  filterOpen || filtersActive > 0
+                    ? "bg-burgundy/10 text-burgundy"
+                    : "text-ink/60 hover:bg-taupe-soft hover:text-ink"
+                }`}
+              >
+                <SlidersHorizontal className="h-5 w-5" />
+                {filtersActive > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 font-nav text-[10px] leading-none text-cream ring-2 ring-cream-soft">
+                    {filtersActive}
+                  </span>
+                )}
+              </button>
+
+              {/* Filter popover — always mounted; `data-open` drives the transition */}
+              <div
+                data-open={open && filterOpen}
+                data-lenis-prevent
+                inert={!(open && filterOpen)}
+                className={`filter-popover absolute right-0 top-full z-10 mt-2 max-h-[min(70vh,26rem)] w-[min(84vw,17rem)] overflow-y-auto rounded-xl border border-taupe/30 bg-cream-soft p-4 shadow-[0_18px_50px_rgba(61,18,32,0.22)] ${
+                  open && filterOpen ? "" : "pointer-events-none"
+                }`}
+              >
+                <h4 className="mb-3 font-nav text-[11px] uppercase tracking-[0.2em] text-ink/60">
+                  Filter &amp; Sort
+                </h4>
+
+                {/* Sort */}
+                <p className="mb-1.5 font-sans text-xs font-medium text-ink/50">Sort by</p>
+                <div className="mb-4 flex flex-col gap-0.5">
+                  {SORT_OPTIONS.map((opt) => {
+                    const active = sort === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSort(opt.value)}
+                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-left font-sans text-sm transition ${
+                          active ? "bg-burgundy/10 text-burgundy" : "text-ink/75 hover:bg-taupe-soft/60"
+                        }`}
+                      >
+                        <span
+                          className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full border ${
+                            active ? "border-burgundy" : "border-taupe"
+                          }`}
+                        >
+                          {active && <span className="h-1.5 w-1.5 rounded-full bg-burgundy" />}
+                        </span>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Price */}
+                <p className="mb-1.5 font-sans text-xs font-medium text-ink/50">Price</p>
+                <div className="mb-4 flex flex-wrap gap-1.5">
+                  {PRICE_OPTIONS.map((opt) => {
+                    const active = priceRange === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPriceRange(opt.value)}
+                        className={`rounded-full px-3 py-1 font-sans text-xs transition ${
+                          active
+                            ? "bg-burgundy text-cream"
+                            : "bg-taupe-soft/60 text-ink/75 hover:bg-taupe-soft"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Category */}
+                <p className="mb-1.5 font-sans text-xs font-medium text-ink/50">Category</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCategory("all")}
+                    className={`rounded-full px-3 py-1 font-sans text-xs transition ${
+                      category === "all"
+                        ? "bg-burgundy text-cream"
+                        : "bg-taupe-soft/60 text-ink/75 hover:bg-taupe-soft"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {CATEGORIES.map((c) => {
+                    const active = category === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCategory(c)}
+                        className={`rounded-full px-3 py-1 font-sans text-xs transition ${
+                          active
+                            ? "bg-burgundy text-cream"
+                            : "bg-taupe-soft/60 text-ink/75 hover:bg-taupe-soft"
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 flex items-center justify-between border-t border-taupe/25 pt-3">
+                  <span className="font-sans text-xs text-ink/55">
+                    {results.length} {results.length === 1 ? "item" : "items"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    disabled={filtersActive === 0}
+                    className="font-nav text-[11px] uppercase tracking-[0.14em] text-burgundy transition hover:opacity-70 disabled:cursor-not-allowed disabled:text-ink/25 disabled:hover:opacity-100"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Close the whole search */}
             <button
               type="button"
               aria-label="Close search"
-              onClick={onClose}
+              onClick={closeSearch}
               className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/60 transition hover:bg-taupe-soft hover:text-ink"
             >
               <X className="h-5 w-5" />
@@ -222,7 +432,8 @@ export default function SearchOverlay({
 
           {/* Products */}
           <h3 className="mb-4 font-nav text-[11px] uppercase tracking-[0.2em] text-ink/55">
-            {q ? "Products" : "Popular Right Now"}
+            {showingResults ? "Results" : "Popular Right Now"}
+            {results.length > 0 && <span className="text-ink/35"> · {results.length}</span>}
           </h3>
 
           {results.length > 0 ? (
@@ -233,7 +444,7 @@ export default function SearchOverlay({
                   href={p.href}
                   onClick={() => {
                     commitSearch(query);
-                    onClose();
+                    closeSearch();
                   }}
                   className="group flex flex-col"
                 >
@@ -267,7 +478,8 @@ export default function SearchOverlay({
             <div className="flex flex-col items-center gap-2 py-10 text-center">
               <Search className="h-6 w-6 text-taupe" />
               <p className="font-sans text-sm text-ink/60">
-                No results for &ldquo;{query.trim()}&rdquo;. Try another search.
+                No products match{q ? <> &ldquo;{query.trim()}&rdquo;</> : " these filters"}. Try
+                adjusting your {filtersActive > 0 && !q ? "filters" : "search"}.
               </p>
             </div>
           )}

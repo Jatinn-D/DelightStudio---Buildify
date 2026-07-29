@@ -67,6 +67,7 @@ export type Product = {
   hoverImage?: string;
   href: string;
   tag?: string;
+  category: string;
 };
 
 /* New Arrivals — placeholder products (names/prices to be confirmed by client). */
@@ -79,6 +80,7 @@ export const newArrivals: Product[] = [
     hoverImage: "/images/p3.jpg",
     href: "/ethnicwear/ethnic-dresses",
     tag: "New",
+    category: "Gowns",
   },
   {
     name: "Rosa Floral Flared Gown",
@@ -88,6 +90,7 @@ export const newArrivals: Product[] = [
     hoverImage: "/images/p2.jpg",
     href: "/ethnicwear/ethnic-dresses",
     tag: "New",
+    category: "Gowns",
   },
   {
     name: "Ivory Shirt & Denim Set",
@@ -95,6 +98,7 @@ export const newArrivals: Product[] = [
     image: "/images/p1.jpg",
     hoverImage: "/images/p4.jpg",
     href: "/ethnicwear/shirt",
+    category: "Sets",
   },
   {
     name: "Monochrome Blouse & Skirt",
@@ -104,6 +108,7 @@ export const newArrivals: Product[] = [
     hoverImage: "/images/p1.jpg",
     href: "/ethnicwear/skirt-sets",
     tag: "Bestseller",
+    category: "Sets",
   },
   {
     name: "Sunlit Summer Dress",
@@ -111,6 +116,7 @@ export const newArrivals: Product[] = [
     image: "/images/p5.jpg",
     hoverImage: "/images/p6.jpg",
     href: "/ethnicwear/ethnic-dresses",
+    category: "Dresses",
   },
   {
     name: "Noir Layered Jacket",
@@ -120,6 +126,7 @@ export const newArrivals: Product[] = [
     hoverImage: "/images/p5.jpg",
     href: "/ethnicwear/mix-n-match",
     tag: "New",
+    category: "Jackets",
   },
 ];
 
