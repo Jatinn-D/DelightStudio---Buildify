@@ -91,7 +91,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
   };
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-20 pt-[112px] sm:px-6 lg:px-10 lg:pt-[150px]">
+    <div className="mx-auto max-w-360 px-4 pb-20 pt-28 sm:px-6 lg:px-10 lg:pt-37.5">
       {/* Breadcrumb */}
       <nav className="mb-6 mt-2 flex flex-wrap items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-ink/45">
         <Link href="/" className="transition-colors hover:text-burgundy">
@@ -127,7 +127,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
 
           <div className="relative flex-1">
             <Morph name={`product-${product.slug}`}>
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-taupe-soft shadow-sm">
+              <div className="relative aspect-4/5 overflow-hidden rounded-2xl bg-taupe-soft shadow-sm">
                 <Image
                   src={product.images[active]}
                   alt={product.name}
@@ -155,7 +155,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="flex flex-col items-center gap-1.5">
                 <Icon className="h-5 w-5 text-burgundy" />
-                <span className="font-nav text-[11px] uppercase tracking-[0.1em] text-ink">
+                <span className="font-nav text-[11px] uppercase tracking-widest text-ink">
                   {label}
                 </span>
                 <span className="font-sans text-[11px] text-ink/45">{sub}</span>
@@ -235,7 +235,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
               <button
                 type="button"
                 onClick={() => setChartOpen(true)}
-                className="flex items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.1em] text-burgundy transition hover:opacity-70"
+                className="flex items-center gap-1.5 font-nav text-[11px] uppercase tracking-widest text-burgundy transition hover:opacity-70"
               >
                 <Ruler className="h-3.5 w-3.5" />
                 Size Chart
@@ -321,7 +321,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
               type="button"
               aria-label="Add to wishlist"
               onClick={() => setWished((w) => !w)}
-              className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full border border-taupe/50 text-ink transition hover:border-burgundy hover:text-burgundy"
+              className="grid h-13 w-13 shrink-0 place-items-center rounded-full border border-taupe/50 text-ink transition hover:border-burgundy hover:text-burgundy"
             >
               <Heart className={`h-5 w-5 ${wished ? "fill-burgundy text-burgundy" : ""}`} />
             </button>

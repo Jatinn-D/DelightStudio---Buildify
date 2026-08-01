@@ -320,7 +320,7 @@ export default function CategoryListing({
   };
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-20 pt-[112px] sm:px-6 lg:px-10 lg:pt-[150px]">
+    <div className="mx-auto max-w-360 px-4 pb-20 pt-28 sm:px-6 lg:px-10 lg:pt-37.5">
       {/* Breadcrumb + style count share one line */}
       <div className="mb-2 mt-2 flex items-center justify-between gap-4">
         <nav className="flex flex-wrap items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-ink/45">
@@ -341,7 +341,7 @@ export default function CategoryListing({
             On mobile the grid collapses, so it just stacks above the products
             (no sticky). It's a fixed-height flex column so the filter list can
             scroll within the rail if it overflows. */}
-        <div className="lg:sticky lg:top-[150px] lg:flex lg:h-[calc(100vh-210px)] lg:flex-col">
+        <div className="lg:sticky lg:top-37.5 lg:flex lg:h-[calc(100vh-210px)] lg:flex-col">
           {/* Header — eyebrow + title (the style count now sits on the breadcrumb line). */}
           <div className="lg:shrink-0">
             {eyebrow && (
@@ -423,7 +423,7 @@ export default function CategoryListing({
           className="filter-drawer absolute left-0 top-0 flex h-full w-[86%] max-w-sm flex-col bg-cream-soft px-5 py-4 shadow-[0_0_60px_rgba(61,18,32,0.28)]"
         >
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold tracking-[0.05em]">Filters</h2>
+            <h2 className="font-display text-xl font-semibold tracking-wider">Filters</h2>
             <button
               type="button"
               aria-label="Close filters"
