@@ -6,16 +6,20 @@ import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus } from "lu
 import { navCategories, brand } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
-import CartDrawer, { initialCart, type CartLine } from "./CartDrawer";
+import { useCart } from "./CartProvider";
+import { useFavorites } from "./FavoritesProvider";
 
-export default function Navbar() {
+/* `forceSolid` keeps the navbar in its solid/light-on-cream treatment on
+   interior pages (shop listings, product details) that have no hero behind it.
+   The homepage leaves it off, so the nav stays transparent over the hero. */
+export default function Navbar({ forceSolid = false }: { forceSolid?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [cart, setCart] = useState<CartLine[]>(initialCart);
+  const { count: cartCount, setOpen: setCartOpen } = useCart();
+  const { count: wishCount } = useFavorites();
 
   // Toggle the solid (scrolled) vs transparent (over-hero) treatment.
   useEffect(() => {
@@ -33,14 +37,13 @@ export default function Navbar() {
     };
   }, [mobileOpen]);
 
-  const solid = scrolled || openMenu !== null;
-  const cartCount = cart.reduce((n, l) => n + l.qty, 0);
+  const solid = scrolled || openMenu !== null || forceSolid;
   const iconBtn =
     "grid h-9 w-9 place-items-center rounded-full transition hover:opacity-60";
 
   return (
     <>
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header className="fixed inset-x-0 top-0 z-50" style={{ viewTransitionName: "site-nav" }}>
       <AnnouncementBar collapsed={scrolled} />
 
       <div
@@ -87,8 +90,16 @@ export default function Navbar() {
               <Link href="/login" aria-label="Account" className={iconBtn}>
                 <User className="h-4.5 w-4.5" />
               </Link>
-              <button aria-label="Wishlist" className={`${iconBtn} hidden sm:grid`}>
+              <button
+                aria-label="Wishlist"
+                className={`${iconBtn} relative hidden sm:grid`}
+              >
                 <Heart className="h-4.5 w-4.5" />
+                {wishCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
+                    {wishCount}
+                  </span>
+                )}
               </button>
               <button
                 aria-label="Cart"
@@ -271,12 +282,6 @@ export default function Navbar() {
     </header>
 
     <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-    <CartDrawer
-      open={cartOpen}
-      onClose={() => setCartOpen(false)}
-      items={cart}
-      onItemsChange={setCart}
-    />
     </>
   );
 }

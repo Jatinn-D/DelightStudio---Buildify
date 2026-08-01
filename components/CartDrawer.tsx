@@ -9,7 +9,7 @@ import { newArrivals, type Product } from "@/lib/data";
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 
-export type CartLine = { product: Product; qty: number };
+export type CartLine = { product: Product; qty: number; size?: string };
 
 /* Seeded so the drawer looks real on first open (matches the bag badge). */
 export const initialCart: CartLine[] = [
@@ -52,10 +52,9 @@ export default function CartDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  const setQty = (name: string, qty: number) =>
-    onItemsChange(items.map((l) => (l.product.name === name ? { ...l, qty } : l)));
-  const remove = (name: string) =>
-    onItemsChange(items.filter((l) => l.product.name !== name));
+  const setQty = (idx: number, qty: number) =>
+    onItemsChange(items.map((l, i) => (i === idx ? { ...l, qty } : l)));
+  const remove = (idx: number) => onItemsChange(items.filter((_, i) => i !== idx));
 
   const count = items.reduce((n, l) => n + l.qty, 0);
   const subtotal = items.reduce((s, l) => s + l.product.price * l.qty, 0);
@@ -110,8 +109,8 @@ export default function CartDrawer({
             {/* Line items */}
             <div data-lenis-prevent className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
               <ul className="flex flex-col gap-5">
-                {items.map((l) => (
-                  <li key={l.product.name} className="flex gap-4">
+                {items.map((l, idx) => (
+                  <li key={`${l.product.name}-${l.size ?? ""}`} className="flex gap-4">
                     <Link
                       href={l.product.href}
                       onClick={onClose}
@@ -138,12 +137,15 @@ export default function CartDrawer({
                           </Link>
                           <p className="mt-0.5 font-nav text-[10px] uppercase tracking-[0.16em] text-ink/40">
                             {l.product.category}
+                            {l.size && (
+                              <span className="text-ink/55"> · Size {l.size}</span>
+                            )}
                           </p>
                         </div>
                         <button
                           type="button"
                           aria-label={`Remove ${l.product.name}`}
-                          onClick={() => remove(l.product.name)}
+                          onClick={() => remove(idx)}
                           className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/40 transition hover:bg-taupe-soft hover:text-burgundy"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -168,7 +170,7 @@ export default function CartDrawer({
                             type="button"
                             aria-label="Decrease quantity"
                             disabled={l.qty <= 1}
-                            onClick={() => setQty(l.product.name, l.qty - 1)}
+                            onClick={() => setQty(idx, l.qty - 1)}
                             className="grid h-6 w-6 place-items-center rounded-full text-ink/70 transition hover:bg-taupe-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                           >
                             <Minus className="h-3.5 w-3.5" />
@@ -179,7 +181,7 @@ export default function CartDrawer({
                           <button
                             type="button"
                             aria-label="Increase quantity"
-                            onClick={() => setQty(l.product.name, l.qty + 1)}
+                            onClick={() => setQty(idx, l.qty + 1)}
                             className="grid h-6 w-6 place-items-center rounded-full text-ink/70 transition hover:bg-taupe-soft hover:text-ink"
                           >
                             <Plus className="h-3.5 w-3.5" />

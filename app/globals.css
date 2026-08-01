@@ -68,8 +68,11 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  /* Guard against the .full-bleed (100vw) sections introducing a horizontal scrollbar. */
-  overflow-x: hidden;
+  /* Guard against the .full-bleed (100vw) sections introducing a horizontal scrollbar.
+     Use `clip` (not `hidden`): `hidden` forces overflow-y to compute to `auto`, which
+     turns <body> into a scroll container and breaks `position: sticky` (the filter
+     rail). `clip` clips the same overflow without establishing a scroll container. */
+  overflow-x: clip;
 }
 
 /* Full-bleed helper: break an element out of its centered container
@@ -170,6 +173,198 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .cart-panel {
+    transition: none;
+  }
+}
+
+/* Wishlist heart — a satisfying pop of the heart plus a burgundy ring that
+   bursts outward when a product is favourited. Transform + opacity only, so it
+   stays GPU-composited. Driven by data-pop on the button (set for one add). */
+.wish-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid var(--color-burgundy);
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+}
+.wish-heart {
+  transition: transform 0.2s ease;
+}
+.wish-btn[data-pop="true"] .wish-heart {
+  animation: wish-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.wish-btn[data-pop="true"] .wish-ring {
+  animation: wish-ring 0.45s ease-out;
+}
+@keyframes wish-pop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.45);
+  }
+  55% {
+    transform: scale(0.85);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes wish-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wish-btn[data-pop="true"] .wish-heart,
+  .wish-btn[data-pop="true"] .wish-ring {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Shop pages — category listing + product detail
+   ============================================================ */
+
+/* Shared-element morph (React <ViewTransition>): the product card image
+   expands into the product-detail hero. The morph works with zero CSS; this
+   just tunes the timing and keeps the fixed navbar anchored so only the
+   content transitions (see AGENTS-referenced view-transitions guide). */
+::view-transition-group(*) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Soften pixel interpolation mid-morph */
+::view-transition-image-pair(*) {
+  animation-name: ds-morph-blur;
+}
+@keyframes ds-morph-blur {
+  40% {
+    filter: blur(2px);
+  }
+}
+/* Gentle crossfade for the rest of the page (the "root" snapshot) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+}
+/* Keep the fixed navbar perfectly still during the morph */
+::view-transition-group(site-nav) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-nav) {
+  display: none;
+}
+::view-transition-new(site-nav) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Themed dual-thumb price range slider. Two native range inputs are stacked;
+   only their thumbs receive pointer events, and a burgundy fill sits between
+   them (positioned inline from the component). */
+.range-dual {
+  position: relative;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+.range-dual .range-base,
+.range-dual .range-fill {
+  position: absolute;
+  height: 3px;
+  border-radius: 9999px;
+}
+.range-dual .range-base {
+  left: 0;
+  right: 0;
+  background: var(--color-taupe-soft);
+}
+.range-dual .range-fill {
+  background: var(--color-burgundy);
+}
+.range-dual input[type="range"] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 1.5rem;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.range-dual input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  background: var(--color-burgundy);
+  border: 2px solid var(--color-cream-soft);
+  box-shadow: 0 1px 5px rgba(61, 18, 32, 0.4);
+  cursor: pointer;
+}
+.range-dual input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  background: var(--color-burgundy);
+  border: 2px solid var(--color-cream-soft);
+  box-shadow: 0 1px 5px rgba(61, 18, 32, 0.4);
+  cursor: pointer;
+}
+.range-dual input[type="range"]::-moz-range-track {
+  background: transparent;
+}
+
+/* Mobile filter drawer — slides in from the left (transform-only = smooth). */
+.filter-drawer {
+  transform: translateX(-100%);
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.filter-drawer[data-open="true"] {
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .filter-drawer {
+    transition: none;
+  }
+}
+
+/* Size-chart modal — settles down + scales in, like the search panel. */
+.sizechart-panel {
+  transform-origin: center;
+  transform: translateY(-8px) scale(0.97);
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out;
+}
+.sizechart-panel[data-open="true"] {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sizechart-panel {
     transition: none;
   }
 }

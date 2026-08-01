@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Jost, Inter } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
+import CartProvider from "@/components/CartProvider";
+import FavoritesProvider from "@/components/FavoritesProvider";
 
 // Display serif — wordmark & section headings (editorial fashion feel)
 const cormorant = Cormorant_Garamond({
@@ -40,7 +42,11 @@ export default function RootLayout({
       className={`${cormorant.variable} ${jost.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-cream text-ink">
-        <SmoothScroll>{children}</SmoothScroll>
+        <SmoothScroll>
+          <FavoritesProvider>
+            <CartProvider>{children}</CartProvider>
+          </FavoritesProvider>
+        </SmoothScroll>
       </body>
     </html>
   );
