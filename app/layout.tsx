@@ -43,9 +43,11 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-cream text-ink">
         <SmoothScroll>
-          <FavoritesProvider>
-            <CartProvider>{children}</CartProvider>
-          </FavoritesProvider>
+          {/* Cart is the outer provider so the Favourites drawer (mounted inside
+              FavoritesProvider) can reach useCart() for its "Add to Bag" actions. */}
+          <CartProvider>
+            <FavoritesProvider>{children}</FavoritesProvider>
+          </CartProvider>
         </SmoothScroll>
       </body>
     </html>

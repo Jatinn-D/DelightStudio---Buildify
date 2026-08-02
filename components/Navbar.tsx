@@ -19,7 +19,7 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
   const [mobileSection, setMobileSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const { count: cartCount, setOpen: setCartOpen } = useCart();
-  const { count: wishCount } = useFavorites();
+  const { count: wishCount, setOpen: setFavOpen } = useFavorites();
 
   // Toggle the solid (scrolled) vs transparent (over-hero) treatment.
   useEffect(() => {
@@ -92,6 +92,7 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
               </Link>
               <button
                 aria-label="Wishlist"
+                onClick={() => setFavOpen(true)}
                 className={`${iconBtn} relative hidden sm:grid`}
               >
                 <Heart className="h-4.5 w-4.5" />

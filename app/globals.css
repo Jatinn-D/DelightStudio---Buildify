@@ -229,6 +229,27 @@ body {
   }
 }
 
+/* Favourites drawer rows — when a heart is un-favourited the row collapses and
+   slides out (rather than a hard cut), so removals read as intentional. The
+   drawer panel itself reuses `.cart-panel` for the identical slide-in. */
+.fav-row {
+  max-height: 400px;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.28s ease, transform 0.3s ease;
+}
+.fav-row[data-exiting="true"] {
+  max-height: 0;
+  opacity: 0;
+  transform: translateX(24px);
+  border-color: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fav-row {
+    transition: none;
+  }
+}
+
 /* ============================================================
    Shop pages — category listing + product detail
    ============================================================ */

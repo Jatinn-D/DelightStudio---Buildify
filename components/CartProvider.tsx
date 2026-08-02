@@ -12,7 +12,7 @@ import type { Product } from "@/lib/data";
 type CartContextValue = {
   items: CartLine[];
   count: number;
-  addItem: (product: Product, qty?: number, size?: string) => void;
+  addItem: (product: Product, qty?: number, size?: string, openDrawer?: boolean) => void;
   setItems: (items: CartLine[]) => void;
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -30,7 +30,9 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>(initialCart);
   const [open, setOpen] = useState(false);
 
-  const addItem = (product: Product, qty = 1, size?: string) => {
+  // `openDrawer` defaults to true so the bag pops on a normal "Add to bag".
+  // The favourites drawer passes false to quiet-add without stealing focus.
+  const addItem = (product: Product, qty = 1, size?: string, openDrawer = true) => {
     setItems((prev) => {
       // Same product + same size = bump the quantity; otherwise a new line.
       const i = prev.findIndex((l) => l.product.name === product.name && l.size === size);
@@ -41,7 +43,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
       }
       return [{ product, qty, size }, ...prev];
     });
-    setOpen(true); // pop the drawer so the add is visible
+    if (openDrawer) setOpen(true); // pop the drawer so the add is visible
   };
 
   const count = items.reduce((n, l) => n + l.qty, 0);
