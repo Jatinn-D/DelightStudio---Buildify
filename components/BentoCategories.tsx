@@ -11,6 +11,15 @@ function spanClasses(span?: "big" | "wide") {
   return "";
 }
 
+/* Mobile-only reorder (2-col view): Innerwear moves up; Tops & Dresses and
+   Shop All drop below it. `lg:order-none` restores the desktop DOM order. */
+function orderClass(name: string) {
+  if (name === "Innerwear") return "order-1 lg:order-none";
+  if (name === "Tops & Dresses") return "order-2 lg:order-none";
+  if (name === "Shop All") return "order-3 lg:order-none";
+  return "";
+}
+
 export default function BentoCategories() {
   return (
     <section id="categories" className="scroll-mt-24 bg-cream pb-16 sm:pb-20 md:pb-24">
@@ -31,7 +40,7 @@ export default function BentoCategories() {
               href={cat.href}
               className={`group relative overflow-hidden rounded-xl bg-taupe-soft ${spanClasses(
                 cat.span
-              )}`}
+              )} ${orderClass(cat.name)}`}
             >
               <Image
                 src={cat.image}

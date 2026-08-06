@@ -111,7 +111,7 @@ export default function Footer() {
           <LinkColumn heading="Policies" links={footerPolicies} />
 
           {/* Contact */}
-          <div>
+          <div id="contact" className="scroll-mt-24">
             <h4 className="mb-4 font-nav text-[11px] uppercase tracking-[0.2em] text-cream/60">
               Visit / Contact
             </h4>

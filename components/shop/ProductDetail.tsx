@@ -12,6 +12,7 @@ import {
   RotateCcw,
   ShieldCheck,
   Ruler,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   ShoppingBag,
@@ -28,6 +29,29 @@ import ShopProductCard from "./ShopProductCard";
 import SizeChartModal from "./SizeChartModal";
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+/* Trust badges — reused so they can sit under the gallery on desktop but move
+   below the accordions on mobile (pass the display + spacing via className). */
+const TRUST = [
+  { icon: Truck, label: "Free shipping", sub: "Over ₹1,499" },
+  { icon: RotateCcw, label: "Easy returns", sub: "7-day policy" },
+  { icon: ShieldCheck, label: "Secure checkout", sub: "100% protected" },
+];
+function TrustBadges({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`grid-cols-3 gap-3 rounded-xl border border-taupe/30 py-5 text-center ${className}`}
+    >
+      {TRUST.map(({ icon: Icon, label, sub }) => (
+        <div key={label} className="flex flex-col items-center gap-1.5">
+          <Icon className="h-5 w-5 text-burgundy" />
+          <span className="font-nav text-[11px] uppercase tracking-widest text-ink">{label}</span>
+          <span className="font-sans text-[11px] text-ink/45">{sub}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function AccordionRow({
   title,
@@ -148,25 +172,36 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
                 )}
               </div>
             </Morph>
+
+            {/* Prev / next arrows — mobile only (desktop has the thumbnail rail) */}
+            {product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Previous image"
+                  onClick={() =>
+                    setActive((a) => (a - 1 + product.images.length) % product.images.length)
+                  }
+                  className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-cream-soft/85 text-ink shadow-sm backdrop-blur-sm transition hover:bg-cream-soft lg:hidden"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next image"
+                  onClick={() => setActive((a) => (a + 1) % product.images.length)}
+                  className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-cream-soft/85 text-ink shadow-sm backdrop-blur-sm transition hover:bg-cream-soft lg:hidden"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
           </div>
           </div>
 
-          {/* Trust badges — sit beneath the image, filling the space */}
-          <div className="mt-5 grid grid-cols-3 gap-3 rounded-xl border border-taupe/30 py-5 text-center">
-            {[
-              { icon: Truck, label: "Free shipping", sub: "Over ₹1,499" },
-              { icon: RotateCcw, label: "Easy returns", sub: "7-day policy" },
-              { icon: ShieldCheck, label: "Secure checkout", sub: "100% protected" },
-            ].map(({ icon: Icon, label, sub }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5">
-                <Icon className="h-5 w-5 text-burgundy" />
-                <span className="font-nav text-[11px] uppercase tracking-widest text-ink">
-                  {label}
-                </span>
-                <span className="font-sans text-[11px] text-ink/45">{sub}</span>
-              </div>
-            ))}
-          </div>
+          {/* Trust badges — under the gallery on desktop; on mobile they move
+              below the Shipping & Returns accordion (rendered again there). */}
+          <TrustBadges className="mt-5 hidden lg:grid" />
         </div>
 
         {/* ---------- Info ---------- */}
@@ -362,6 +397,9 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
               returns &amp; exchange. Cash on Delivery available across India.
             </AccordionRow>
           </div>
+
+          {/* Trust badges — on mobile they live here, below Shipping & Returns */}
+          <TrustBadges className="mt-8 grid lg:hidden" />
         </div>
       </div>
 

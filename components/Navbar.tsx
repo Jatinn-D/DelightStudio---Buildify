@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus } from "lucide-react";
+import { useLenis } from "lenis/react";
 import { navCategories, brand } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
@@ -30,6 +31,13 @@ export default function Navbar({
   const [hidden, setHidden] = useState(false);
   const { count: cartCount, setOpen: setCartOpen } = useCart();
   const { count: wishCount, setOpen: setFavOpen } = useFavorites();
+  const lenis = useLenis();
+
+  // "Contact Us" (mobile menu) → close the drawer, then scroll to the footer.
+  const goToContact = () => {
+    setMobileOpen(false);
+    requestAnimationFrame(() => lenis?.scrollTo("#contact", { offset: -80 }));
+  };
 
   // Toggle the solid (scrolled) vs transparent (over-hero) treatment.
   useEffect(() => {
@@ -84,7 +92,7 @@ export default function Navbar({
       <button
         aria-label="Wishlist"
         onClick={() => setFavOpen(true)}
-        className={`${iconBtn} relative hidden sm:grid`}
+        className={`${iconBtn} relative`}
       >
         <Heart className="h-4.5 w-4.5" />
         {wishCount > 0 && (
@@ -235,47 +243,29 @@ export default function Navbar({
               mobileOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
-            <div className="flex items-center justify-between border-b border-taupe/40 px-5 py-4">
-              <span className="font-display text-lg font-semibold tracking-[0.28em]">
-                {brand.wordmark}
-              </span>
-              <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className={iconBtn}>
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <nav className="flex-1 overflow-y-auto px-5 py-4">
-              {/* Search trigger — opens the same panel on phones */}
+            {/* Search bar + close on a single line */}
+            <div className="flex items-center gap-3 border-b border-taupe/40 px-5 py-3.5">
               <button
                 type="button"
                 onClick={() => {
                   setMobileOpen(false);
                   setSearchOpen(true);
                 }}
-                className="mb-3 flex w-full items-center gap-3 rounded-full border border-taupe/50 px-4 py-3 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
+                className="flex flex-1 items-center gap-3 rounded-full border border-taupe/50 px-4 py-2.5 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
               >
                 <Search className="h-4.5 w-4.5 shrink-0" />
                 Search for sarees, kurtis…
               </button>
-
-              {/* Wishlist row on phones (the desktop heart is hidden < sm) */}
               <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  setFavOpen(true);
-                }}
-                className="mb-3 flex w-full items-center gap-3 rounded-full border border-taupe/50 px-4 py-3 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
+                aria-label="Close menu"
+                onClick={() => setMobileOpen(false)}
+                className={`${iconBtn} shrink-0`}
               >
-                <Heart className="h-4.5 w-4.5 shrink-0" />
-                My Favourites
-                {wishCount > 0 && (
-                  <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
-                    {wishCount}
-                  </span>
-                )}
+                <X className="h-5 w-5" />
               </button>
+            </div>
 
+            <nav className="flex-1 overflow-y-auto px-4 py-2">
               <ul className="divide-y divide-taupe/30">
                 {navCategories.map((cat) => (
                   <li key={cat.label} className="py-1">
@@ -303,36 +293,49 @@ export default function Navbar({
                         </button>
                       )}
                     </div>
-                    {cat.columns && mobileSection === cat.label && (
-                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-3 pl-1">
-                        {cat.columns.flatMap((col) =>
-                          col.links.map((l) => (
-                            <li key={l.label}>
-                              <Link
-                                href={l.href}
-                                onClick={() => setMobileOpen(false)}
-                                className="block py-1.5 font-display text-base text-ink/75"
-                              >
-                                {l.label}
-                              </Link>
-                            </li>
-                          ))
-                        )}
-                      </ul>
+                    {cat.columns && (
+                      /* Smooth open/close via grid-rows 0fr → 1fr + fade */
+                      <div
+                        className={`grid transition-all duration-300 ease-out motion-reduce:transition-none ${
+                          mobileSection === cat.label
+                            ? "grid-rows-[1fr] opacity-100"
+                            : "grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-3 pl-1">
+                            {cat.columns.flatMap((col) =>
+                              col.links.map((l) => (
+                                <li key={l.label}>
+                                  <Link
+                                    href={l.href}
+                                    onClick={() => setMobileOpen(false)}
+                                    className="block py-1.5 font-display text-base text-ink/75"
+                                  >
+                                    {l.label}
+                                  </Link>
+                                </li>
+                              ))
+                            )}
+                          </ul>
+                        </div>
+                      </div>
                     )}
                   </li>
                 ))}
+
+                {/* Contact Us — scrolls to the footer contact block */}
+                <li className="py-1">
+                  <button
+                    type="button"
+                    onClick={goToContact}
+                    className="w-full py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+                  >
+                    Contact Us
+                  </button>
+                </li>
               </ul>
             </nav>
-
-            <div className="border-t border-taupe/40 px-5 py-4 font-sans text-sm text-ink/70">
-              <a href={brand.phoneHref} className="block">
-                {brand.phone}
-              </a>
-              <a href={`mailto:${brand.email}`} className="block">
-                {brand.email}
-              </a>
-            </div>
           </aside>
         </div>
       </header>

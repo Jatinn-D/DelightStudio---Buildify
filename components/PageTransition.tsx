@@ -1,26 +1,41 @@
 "use client";
 
-import * as React from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
-/* Wraps the whole page in React's <ViewTransition> so EVERY route navigation
-   runs a smooth crossfade — not only the product-card → detail morph. The
-   crossfade timing is tuned by `::view-transition-old/new(root)` in globals.css;
-   the still navbar (viewTransitionName: "site-nav") and the product morph
-   (named <Morph> boundaries) keep working as shared elements inside it.
+/* Light page transition: fade the new page in on section navigations using the
+   Web Animations API on a persistent wrapper — no remount and no View-Transition
+   snapshot, so it stays smooth on heavy pages (no lag).
 
-   Mirrors components/shop/Morph.tsx: the stable @types/react doesn't declare
-   ViewTransition, so we read it off the runtime module and fall back to plain
-   children if it's unavailable (older browser / flag off) — no animation, but
-   the app still works. */
-type VTComponent = React.ComponentType<{ children: React.ReactNode }>;
-
-const RuntimeViewTransition: VTComponent | undefined =
-  (React as unknown as { ViewTransition?: VTComponent }).ViewTransition ??
-  (React as unknown as { unstable_ViewTransition?: VTComponent }).unstable_ViewTransition;
-
+   Product navigations (to or from /product/*) are skipped entirely, so the
+   card ↔ detail shared-element morph (React <ViewTransition> in <Morph>) plays
+   exactly as it did before, in both directions. */
 export default function PageTransition({ children }: { children: React.ReactNode }) {
-  if (RuntimeViewTransition) {
-    return <RuntimeViewTransition>{children}</RuntimeViewTransition>;
-  }
-  return <>{children}</>;
+  const pathname = usePathname();
+  const ref = useRef<HTMLDivElement>(null);
+  const prev = useRef<string | null>(null);
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = pathname;
+
+    if (!mounted.current) {
+      mounted.current = true;
+      return; // no fade on the very first load
+    }
+    if (from === pathname) return; // not an actual navigation
+
+    const isProduct = (p: string | null) => !!p && p.startsWith("/product/");
+    if (isProduct(pathname) || isProduct(from)) return; // let the product morph run
+
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+    ref.current?.animate(
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    );
+  }, [pathname]);
+
+  return <div ref={ref}>{children}</div>;
 }

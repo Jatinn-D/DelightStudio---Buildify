@@ -138,7 +138,17 @@ export default function CartDrawer({
                           <p className="mt-0.5 font-nav text-[10px] uppercase tracking-[0.16em] text-ink/40">
                             {l.product.category}
                             {l.size && (
-                              <span className="text-ink/55"> · Size {l.size}</span>
+                              <span className="text-ink/60">
+                                {" · "}
+                                {l.size === "Free Size" ? (
+                                  <span className="font-medium text-burgundy">Free Size</span>
+                                ) : (
+                                  <>
+                                    Size{" "}
+                                    <span className="font-medium text-burgundy">{l.size}</span>
+                                  </>
+                                )}
+                              </span>
                             )}
                           </p>
                         </div>

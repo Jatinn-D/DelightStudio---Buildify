@@ -370,7 +370,7 @@ export default function CategoryListing({
       {/* Breadcrumb + style count — a sticky bar that stays pinned under the
           navbar as you scroll (bleeds to the content edges for a clean divider). */}
       <div className="sticky top-16 z-30 -mx-4 mb-3 border-b border-taupe/20 bg-cream/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <nav className="flex flex-wrap items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-ink/45">
             <Link href="/" className="transition-colors hover:text-burgundy">
               Home
@@ -378,30 +378,32 @@ export default function CategoryListing({
             <ChevronRight className="h-3 w-3" />
             <span className="text-ink/70">{title}</span>
           </nav>
-          <p className="shrink-0 font-sans text-[13px] text-ink/55">
-            {results.length} {results.length === 1 ? "style" : "styles"}
-          </p>
+          <div className="flex shrink-0 items-center gap-3">
+            <p className="font-sans text-[13px] text-ink/55">
+              {results.length} {results.length === 1 ? "style" : "styles"}
+            </p>
+            {/* Filters button lives on this line (mobile) so it's always reachable
+                while scrolling — the desktop rail has the filters instead. */}
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="flex items-center gap-1.5 rounded-full border border-taupe/50 px-3 py-1.5 font-nav text-[11px] uppercase tracking-[0.12em] text-ink transition hover:border-burgundy hover:text-burgundy lg:hidden"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
+              {activeCount > 0 && (
+                <span className="grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
+                  {activeCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="mt-3 lg:mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8 xl:grid-cols-[16rem_minmax(0,1fr)]">
-        {/* Left column — filters */}
+        {/* Left column — filters (the mobile trigger now lives on the breadcrumb line) */}
         <div>
-          {/* Mobile filter trigger */}
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="mb-4 flex items-center gap-2 rounded-full border border-taupe/50 px-4 py-2.5 font-nav text-[12px] uppercase tracking-[0.14em] text-ink transition hover:border-burgundy hover:text-burgundy lg:hidden"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-            {activeCount > 0 && (
-              <span className="grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
-                {activeCount}
-              </span>
-            )}
-          </button>
-
           {/* Desktop rail — sticky, natural height (scrolls only if it overflows).
               No fixed height, so there's no dead space below the buttons. */}
           <div
