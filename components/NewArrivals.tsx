@@ -13,7 +13,7 @@ export default function NewArrivals() {
 
   return (
     <section id="new-arrivals" className="scroll-mt-24 bg-cream py-16 sm:py-20 md:py-24">
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-360 px-4 sm:px-6 lg:px-10">
         <SectionHeading eyebrow="Fresh off the rack" title="New Arrivals" />
       </div>
 

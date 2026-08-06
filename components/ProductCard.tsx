@@ -15,7 +15,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="group flex flex-col">
       <Link
         href={product.href}
-        className="relative block aspect-[4/5] overflow-hidden rounded-md bg-taupe-soft"
+        className="relative block aspect-4/5 overflow-hidden rounded-md bg-taupe-soft"
       >
         {/* Primary image */}
         <Image
