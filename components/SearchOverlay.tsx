@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useLenis } from "lenis/react";
-import { newArrivals } from "@/lib/data";
+import { catalog } from "@/lib/data";
 
 const RECENT_KEY = "ds-recent-searches";
 const MAX_RECENT = 8;
-const POPULAR = ["Kurta", "Anarkali", "Kurta Sets", "Nighty", "Bottomwear"];
+const MAX_RESULTS = 24; // cap the grid — the catalogue is large
+const POPULAR = ["Saree", "Kurti", "Anarkali", "Jeans", "Top"];
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 
 type SortValue = "featured" | "price-asc" | "price-desc" | "newest";
@@ -23,12 +24,12 @@ const SORT_OPTIONS: { value: SortValue; label: string }[] = [
 ];
 const PRICE_OPTIONS: { value: PriceValue; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "u2000", label: "Under ₹2,000" },
-  { value: "2000-3500", label: "₹2,000–3,500" },
-  { value: "o3500", label: "Above ₹3,500" },
+  { value: "u2000", label: "Under ₹1,000" },
+  { value: "2000-3500", label: "₹1,000–2,500" },
+  { value: "o3500", label: "Above ₹2,500" },
 ];
 /* Derived once from the data so it stays in sync with lib/data.ts. */
-const CATEGORIES = Array.from(new Set(newArrivals.map((p) => p.category)));
+const CATEGORIES = Array.from(new Set(catalog.map((p) => p.category)));
 
 export default function SearchOverlay({
   open,
@@ -138,18 +139,18 @@ export default function SearchOverlay({
   const inBucket = (price: number) => {
     switch (priceRange) {
       case "u2000":
-        return price < 2000;
+        return price < 1000;
       case "2000-3500":
-        return price >= 2000 && price <= 3500;
+        return price >= 1000 && price <= 2500;
       case "o3500":
-        return price > 3500;
+        return price > 2500;
       default:
         return true;
     }
   };
 
   const q = query.trim().toLowerCase();
-  let results = newArrivals.filter((p) => {
+  let results = catalog.filter((p) => {
     if (q && !p.name.toLowerCase().includes(q)) return false;
     if (category !== "all" && p.category !== category) return false;
     if (!inBucket(p.price)) return false;
@@ -204,7 +205,7 @@ export default function SearchOverlay({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") commitSearch(query);
                 }}
-                placeholder="Search for kurtas, gowns…"
+                placeholder="Search for sarees, kurtis…"
                 aria-label="Search products"
                 className="w-full bg-transparent font-sans text-base text-ink placeholder:text-ink/40 focus:outline-none"
               />
@@ -438,9 +439,9 @@ export default function SearchOverlay({
 
           {results.length > 0 ? (
             <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
-              {results.map((p) => (
+              {results.slice(0, MAX_RESULTS).map((p) => (
                 <Link
-                  key={p.name}
+                  key={p.slug}
                   href={p.href}
                   onClick={() => {
                     commitSearch(query);

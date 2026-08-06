@@ -76,29 +76,34 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
 
   const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   const inStock = new Set<Size>(product.sizes);
-  const low = product.stock <= 5;
-  const maxQty = Math.min(product.stock, 10);
+  const soldOut = product.stock <= 0;
+  const low = !soldOut && product.stock <= 5;
+  const maxQty = Math.max(1, Math.min(product.stock, 10));
   const related = productsByCategory(product.category)
     .filter((p) => p.slug !== product.slug)
     .slice(0, 4);
 
   const addToBag = () => {
-    if (!size) {
+    if (soldOut) return;
+    if (!product.freeSize && !size) {
       setNeedSize(true);
       return;
     }
-    addItem(product, qty, size);
+    addItem(product, qty, product.freeSize ? "Free Size" : (size as Size));
   };
 
   return (
-    <div className="mx-auto max-w-360 px-4 pb-20 pt-28 sm:px-6 lg:px-10 lg:pt-37.5">
+    <div className="mx-auto max-w-360 px-4 pb-20 pt-24 sm:px-6 lg:px-10 lg:pt-28">
       {/* Breadcrumb */}
       <nav className="mb-6 mt-2 flex flex-wrap items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-ink/45">
         <Link href="/" className="transition-colors hover:text-burgundy">
           Home
         </Link>
         <ChevronRight className="h-3 w-3" />
-        <Link href="/ethnicwear/kurta" className="transition-colors hover:text-burgundy">
+        <Link
+          href={`/shop/${product.categorySlug}`}
+          className="transition-colors hover:text-burgundy"
+        >
           {product.category}
         </Link>
         <ChevronRight className="h-3 w-3" />
@@ -127,7 +132,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
 
           <div className="relative flex-1">
             <Morph name={`product-${product.slug}`}>
-              <div className="relative aspect-4/5 overflow-hidden rounded-2xl bg-taupe-soft shadow-sm">
+              <div className="relative aspect-4/5 overflow-hidden rounded-lg bg-taupe-soft shadow-sm">
                 <Image
                   src={product.images[active]}
                   alt={product.name}
@@ -220,13 +225,30 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
             <span>
               <span className="text-ink/40">Fabric:</span> {product.fabric}
             </span>
-            <span className={low ? "text-burgundy" : "text-ink/60"}>
+            <span className={soldOut || low ? "text-burgundy" : "text-ink/60"}>
               <span className="text-ink/40">Availability:</span>{" "}
-              {low ? `Only ${product.stock} left` : `${product.stock} in stock`}
+              {soldOut
+                ? "Out of stock"
+                : low
+                  ? `Only ${product.stock} left`
+                  : `${product.stock} in stock`}
             </span>
           </div>
 
-          {/* Sizes */}
+          {/* Sizes — sarees are one-size (freeSize); everything else uses S–XXL */}
+          {product.freeSize ? (
+            <div className="mt-7">
+              <span className="font-nav text-[12px] uppercase tracking-[0.14em] text-ink">Size</span>
+              <div className="mt-2.5">
+                <span className="inline-grid h-11 min-w-24 place-items-center rounded-md border border-burgundy bg-burgundy px-6 font-nav text-xs uppercase tracking-[0.12em] text-cream">
+                  Free Size
+                </span>
+                <p className="mt-2 font-sans text-[12.5px] text-ink/50">
+                  One size — designed to drape and fit most.
+                </p>
+              </div>
+            </div>
+          ) : (
           <div className="mt-7">
             <div className="mb-2.5 flex items-center justify-between">
               <span className="font-nav text-[12px] uppercase tracking-[0.14em] text-ink">
@@ -242,9 +264,9 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
               </button>
             </div>
 
-            <div className="grid grid-cols-6 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {SIZE_LADDER.map((s) => {
-                const avail = inStock.has(s);
+                const avail = !soldOut && inStock.has(s);
                 if (!avail) {
                   return (
                     <div key={s} className="group/sz relative">
@@ -283,6 +305,7 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
               </p>
             )}
           </div>
+          )}
 
           {/* Quantity + actions */}
           <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -311,10 +334,11 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
             <button
               type="button"
               onClick={addToBag}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-burgundy px-8 py-3.5 font-nav text-sm uppercase tracking-[0.16em] text-cream transition hover:bg-burgundy/90"
+              disabled={soldOut}
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-burgundy px-8 py-3.5 font-nav text-sm uppercase tracking-[0.16em] text-cream transition hover:bg-burgundy/90 disabled:cursor-not-allowed disabled:bg-ink/25 disabled:hover:bg-ink/25"
             >
               <ShoppingBag className="h-4 w-4" />
-              Add to Bag
+              {soldOut ? "Out of Stock" : "Add to Bag"}
             </button>
 
             <button

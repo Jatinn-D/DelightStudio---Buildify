@@ -18,12 +18,12 @@ export default function BentoCategories() {
         <SectionHeading
           eyebrow="Find your fit"
           title="Shop by Category"
-          link={{ label: "All categories", href: "/new" }}
+          link={{ label: "All categories", href: "/shop/new" }}
         />
       </div>
 
-      {/* Full-bleed bento — edge to edge, small gaps, rounded tiles. */}
-      <div className="full-bleed mt-10">
+      {/* Bento — padded to align with the heading (no longer edge-to-edge). */}
+      <div className="mx-auto mt-10 max-w-[1440px] px-4 sm:px-6 lg:px-10">
         <div className="grid auto-rows-[43vw] grid-cols-2 gap-[10px] sm:auto-rows-[15rem] sm:gap-3 lg:grid-cols-4">
           {categories.map((cat) => (
             <Link

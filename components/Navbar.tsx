@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus } from "lucide-react";
 import { navCategories, brand } from "@/lib/data";
@@ -9,15 +9,25 @@ import SearchOverlay from "./SearchOverlay";
 import { useCart } from "./CartProvider";
 import { useFavorites } from "./FavoritesProvider";
 
-/* `forceSolid` keeps the navbar in its solid/light-on-cream treatment on
-   interior pages (shop listings, product details) that have no hero behind it.
-   The homepage leaves it off, so the nav stays transparent over the hero. */
-export default function Navbar({ forceSolid = false }: { forceSolid?: boolean }) {
+/* One navbar for every page: brand pinned left, category links centered, utility
+   icons right (a 1fr / auto / 1fr grid keeps the links optically centered).
+   `forceSolid` keeps it in the solid cream treatment on pages with no hero behind
+   it (product detail); otherwise it stays see-through over the hero and turns
+   solid on scroll — unchanged from before. `autoHide` (homepage only) slides the
+   whole bar up when scrolling down and back in when scrolling up. */
+export default function Navbar({
+  forceSolid = false,
+  autoHide = false,
+}: {
+  forceSolid?: boolean;
+  autoHide?: boolean;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const { count: cartCount, setOpen: setCartOpen } = useCart();
   const { count: wishCount, setOpen: setFavOpen } = useFavorites();
 
@@ -28,6 +38,23 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Auto-hide (homepage): reveal on scroll-up, hide on scroll-down, always show
+  // near the very top. Direction tracked without re-subscribing each render.
+  const lastY = useRef(0);
+  useEffect(() => {
+    if (!autoHide) return;
+    lastY.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 90) setHidden(false);
+      else if (y > lastY.current + 6) setHidden(true);
+      else if (y < lastY.current - 6) setHidden(false);
+      lastY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [autoHide]);
 
   // Lock body scroll while the mobile drawer is open.
   useEffect(() => {
@@ -41,101 +68,111 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
   const iconBtn =
     "grid h-9 w-9 place-items-center rounded-full transition hover:opacity-60";
 
+  // Utility icons — shared cluster.
+  const iconCluster = (
+    <>
+      <button
+        aria-label="Search"
+        onClick={() => setSearchOpen((v) => !v)}
+        className={`${iconBtn} hidden sm:grid`}
+      >
+        <Search className="h-4.5 w-4.5" />
+      </button>
+      <Link href="/login" aria-label="Account" className={iconBtn}>
+        <User className="h-4.5 w-4.5" />
+      </Link>
+      <button
+        aria-label="Wishlist"
+        onClick={() => setFavOpen(true)}
+        className={`${iconBtn} relative hidden sm:grid`}
+      >
+        <Heart className="h-4.5 w-4.5" />
+        {wishCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
+            {wishCount}
+          </span>
+        )}
+      </button>
+      <button
+        aria-label="Cart"
+        onClick={() => setCartOpen(true)}
+        className={`${iconBtn} relative`}
+      >
+        <ShoppingBag className="h-4.5 w-4.5" />
+        {cartCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
+            {cartCount}
+          </span>
+        )}
+      </button>
+    </>
+  );
+
+  // Category links — centered list.
+  const navItems = navCategories.map((cat) => (
+    <li key={cat.label} onMouseEnter={() => setOpenMenu(cat.columns ? cat.label : null)}>
+      <Link
+        href={cat.href}
+        onFocus={() => setOpenMenu(cat.columns ? cat.label : null)}
+        className="flex items-center gap-1 font-nav text-[12.5px] font-medium uppercase tracking-[0.16em]"
+      >
+        <span className="nav-underline">{cat.label}</span>
+        {cat.columns && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
+      </Link>
+    </li>
+  ));
+
   return (
     <>
-    <header className="fixed inset-x-0 top-0 z-50" style={{ viewTransitionName: "site-nav" }}>
-      <AnnouncementBar collapsed={scrolled} />
-
-      <div
-        onMouseLeave={() => setOpenMenu(null)}
-        className={`relative transition-colors duration-300 ${
-          solid
-            ? "bg-cream-soft/98 text-ink shadow-[0_2px_24px_rgba(61,18,32,0.08)] backdrop-blur"
-            : "text-cream"
-        }`}
+      <header
+        data-hidden={autoHide && hidden}
+        className="site-nav-header fixed inset-x-0 top-0 z-50"
+        style={{ viewTransitionName: "site-nav" }}
       >
-        {/* Legibility scrim when transparent over the hero image */}
-        {!solid && (
-          <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/45 via-black/15 to-transparent" />
-        )}
+        <AnnouncementBar collapsed={scrolled} />
 
-        <div className="relative mx-auto max-w-360 px-4 sm:px-6">
-          {/* Row 1 — hamburger (mobile) · centered wordmark · utility icons */}
-          <div className="flex h-16 items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr]">
-            <div className="flex items-center lg:justify-self-start">
-              <button
-                aria-label="Open menu"
-                onClick={() => setMobileOpen(true)}
-                className={`${iconBtn} lg:hidden`}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </div>
+        <div
+          onMouseLeave={() => setOpenMenu(null)}
+          className={`relative transition-colors duration-300 ${
+            solid
+              ? "bg-cream-soft/98 text-ink shadow-[0_2px_24px_rgba(61,18,32,0.08)] backdrop-blur"
+              : "text-cream"
+          }`}
+        >
+          {/* Legibility scrim when transparent over a hero image */}
+          {!solid && (
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/45 via-black/15 to-transparent" />
+          )}
 
-            <Link
-              href="/"
-              className="whitespace-nowrap font-display text-lg font-semibold tracking-[0.2em] sm:text-2xl sm:tracking-[0.32em] lg:justify-self-center lg:text-[26px]"
-            >
-              {brand.wordmark}
-            </Link>
+          {/* Single row — brand left · links centered · icons right */}
+          <div className="relative mx-auto max-w-360 px-4 sm:px-6">
+            <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">
+              {/* Left — hamburger (mobile) + wordmark */}
+              <div className="flex items-center gap-2 justify-self-start">
+                <button
+                  aria-label="Open menu"
+                  onClick={() => setMobileOpen(true)}
+                  className={`${iconBtn} lg:hidden`}
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <Link
+                  href="/"
+                  className="whitespace-nowrap font-display text-lg font-semibold tracking-[0.2em] sm:text-xl"
+                >
+                  {brand.wordmark}
+                </Link>
+              </div>
 
-            <div className="flex items-center justify-end gap-1 sm:gap-2 lg:justify-self-end">
-              <button
-                aria-label="Search"
-                onClick={() => setSearchOpen((v) => !v)}
-                className={`${iconBtn} hidden sm:grid`}
-              >
-                <Search className="h-4.5 w-4.5" />
-              </button>
-              <Link href="/login" aria-label="Account" className={iconBtn}>
-                <User className="h-4.5 w-4.5" />
-              </Link>
-              <button
-                aria-label="Wishlist"
-                onClick={() => setFavOpen(true)}
-                className={`${iconBtn} relative hidden sm:grid`}
-              >
-                <Heart className="h-4.5 w-4.5" />
-                {wishCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
-                    {wishCount}
-                  </span>
-                )}
-              </button>
-              <button
-                aria-label="Cart"
-                onClick={() => setCartOpen(true)}
-                className={`${iconBtn} relative`}
-              >
-                <ShoppingBag className="h-4.5 w-4.5" />
-                {cartCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+              {/* Center — category links (desktop) */}
+              <ul className="hidden items-center gap-7 justify-self-center lg:flex xl:gap-9">
+                {navItems}
+              </ul>
+
+              {/* Right — utility icons */}
+              <div className="flex items-center gap-1 justify-self-end sm:gap-2">{iconCluster}</div>
             </div>
           </div>
-
-          {/* Row 2 — centered category links with mega-menus (desktop) */}
-          <ul
-            className={`hidden justify-center gap-8 border-t py-3.5 lg:flex ${
-              solid ? "border-taupe/30" : "border-cream/20"
-            }`}
-          >
-            {navCategories.map((cat) => (
-              <li key={cat.label} onMouseEnter={() => setOpenMenu(cat.columns ? cat.label : null)}>
-                <Link
-                  href={cat.href}
-                  onFocus={() => setOpenMenu(cat.columns ? cat.label : null)}
-                  className="flex items-center gap-1 font-nav text-[12.5px] font-medium uppercase tracking-[0.16em]"
-                >
-                  <span className="nav-underline">{cat.label}</span>
-                  {cat.columns && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* Mega-menu panel */}
@@ -144,6 +181,7 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
             <div
               key={cat.label}
               onMouseEnter={() => setOpenMenu(cat.label)}
+              onMouseLeave={() => setOpenMenu(null)}
               className="absolute inset-x-0 top-full hidden border-t border-taupe/40 bg-cream-soft/98 text-ink shadow-[0_20px_40px_rgba(61,18,32,0.12)] lg:block"
             >
               <div className="mx-auto grid max-w-360 grid-cols-[repeat(2,minmax(0,220px))_1fr] gap-10 px-8 py-8">
@@ -180,109 +218,126 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
             </div>
           ) : null
         )}
-      </div>
 
-      {/* Mobile drawer */}
-      <div
-        className={`fixed inset-0 z-50 lg:hidden ${mobileOpen ? "" : "pointer-events-none"}`}
-        aria-hidden={!mobileOpen}
-      >
+        {/* Mobile drawer */}
         <div
-          onClick={() => setMobileOpen(false)}
-          className={`absolute inset-0 bg-ink/40 transition-opacity duration-300 ${
-            mobileOpen ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        <aside
-          className={`absolute right-0 top-0 flex h-full w-[84%] max-w-sm flex-col bg-cream-soft text-ink shadow-2xl transition-transform duration-300 ${
-            mobileOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`fixed inset-0 z-50 lg:hidden ${mobileOpen ? "" : "pointer-events-none"}`}
+          aria-hidden={!mobileOpen}
         >
-          <div className="flex items-center justify-between border-b border-taupe/40 px-5 py-4">
-            <span className="font-display text-lg font-semibold tracking-[0.28em]">
-              {brand.wordmark}
-            </span>
-            <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className={iconBtn}>
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <div
+            onClick={() => setMobileOpen(false)}
+            className={`absolute inset-0 bg-ink/40 transition-opacity duration-300 ${
+              mobileOpen ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <aside
+            className={`absolute right-0 top-0 flex h-full w-[84%] max-w-sm flex-col bg-cream-soft text-ink shadow-2xl transition-transform duration-300 ${
+              mobileOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-taupe/40 px-5 py-4">
+              <span className="font-display text-lg font-semibold tracking-[0.28em]">
+                {brand.wordmark}
+              </span>
+              <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className={iconBtn}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-          <nav className="flex-1 overflow-y-auto px-5 py-4">
-            {/* Search trigger — opens the same panel on phones */}
-            <button
-              type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                setSearchOpen(true);
-              }}
-              className="mb-3 flex w-full items-center gap-3 rounded-full border border-taupe/50 px-4 py-3 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
-            >
-              <Search className="h-4.5 w-4.5 shrink-0" />
-              Search for kurtas, gowns…
-            </button>
+            <nav className="flex-1 overflow-y-auto px-5 py-4">
+              {/* Search trigger — opens the same panel on phones */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setSearchOpen(true);
+                }}
+                className="mb-3 flex w-full items-center gap-3 rounded-full border border-taupe/50 px-4 py-3 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
+              >
+                <Search className="h-4.5 w-4.5 shrink-0" />
+                Search for sarees, kurtis…
+              </button>
 
-            <ul className="divide-y divide-taupe/30">
-              {navCategories.map((cat) => (
-                <li key={cat.label} className="py-1">
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={cat.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex-1 py-3 font-nav text-sm uppercase tracking-[0.14em]"
-                    >
-                      {cat.label}
-                    </Link>
-                    {cat.columns && (
-                      <button
-                        aria-label={`Toggle ${cat.label}`}
-                        onClick={() =>
-                          setMobileSection((s) => (s === cat.label ? null : cat.label))
-                        }
-                        className="grid h-9 w-9 place-items-center"
+              {/* Wishlist row on phones (the desktop heart is hidden < sm) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setFavOpen(true);
+                }}
+                className="mb-3 flex w-full items-center gap-3 rounded-full border border-taupe/50 px-4 py-3 text-left font-sans text-sm text-ink/60 transition hover:border-burgundy/60 hover:text-burgundy"
+              >
+                <Heart className="h-4.5 w-4.5 shrink-0" />
+                My Favourites
+                {wishCount > 0 && (
+                  <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-burgundy px-1 text-[10px] font-semibold text-cream">
+                    {wishCount}
+                  </span>
+                )}
+              </button>
+
+              <ul className="divide-y divide-taupe/30">
+                {navCategories.map((cat) => (
+                  <li key={cat.label} className="py-1">
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={cat.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex-1 py-3 font-nav text-sm uppercase tracking-[0.14em]"
                       >
-                        <Plus
-                          className={`h-4 w-4 transition-transform ${
-                            mobileSection === cat.label ? "rotate-45" : ""
-                          }`}
-                        />
-                      </button>
-                    )}
-                  </div>
-                  {cat.columns && mobileSection === cat.label && (
-                    <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-3 pl-1">
-                      {cat.columns.flatMap((col) =>
-                        col.links.map((l) => (
-                          <li key={l.label}>
-                            <Link
-                              href={l.href}
-                              onClick={() => setMobileOpen(false)}
-                              className="block py-1.5 font-display text-base text-ink/75"
-                            >
-                              {l.label}
-                            </Link>
-                          </li>
-                        ))
+                        {cat.label}
+                      </Link>
+                      {cat.columns && (
+                        <button
+                          aria-label={`Toggle ${cat.label}`}
+                          onClick={() =>
+                            setMobileSection((s) => (s === cat.label ? null : cat.label))
+                          }
+                          className="grid h-9 w-9 place-items-center"
+                        >
+                          <Plus
+                            className={`h-4 w-4 transition-transform ${
+                              mobileSection === cat.label ? "rotate-45" : ""
+                            }`}
+                          />
+                        </button>
                       )}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </nav>
+                    </div>
+                    {cat.columns && mobileSection === cat.label && (
+                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-3 pl-1">
+                        {cat.columns.flatMap((col) =>
+                          col.links.map((l) => (
+                            <li key={l.label}>
+                              <Link
+                                href={l.href}
+                                onClick={() => setMobileOpen(false)}
+                                className="block py-1.5 font-display text-base text-ink/75"
+                              >
+                                {l.label}
+                              </Link>
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-          <div className="border-t border-taupe/40 px-5 py-4 font-sans text-sm text-ink/70">
-            <a href={brand.phoneHref} className="block">
-              {brand.phone}
-            </a>
-            <a href={`mailto:${brand.email}`} className="block">
-              {brand.email}
-            </a>
-          </div>
-        </aside>
-      </div>
-    </header>
+            <div className="border-t border-taupe/40 px-5 py-4 font-sans text-sm text-ink/70">
+              <a href={brand.phoneHref} className="block">
+                {brand.phone}
+              </a>
+              <a href={`mailto:${brand.email}`} className="block">
+                {brand.email}
+              </a>
+            </div>
+          </aside>
+        </div>
+      </header>
 
-    <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

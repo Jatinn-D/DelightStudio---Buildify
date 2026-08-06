@@ -4,14 +4,16 @@ import { useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { SIZE_LADDER, type CatalogProduct, type Size } from "@/lib/data";
+import { SIZE_LADDER, type CatalogProduct } from "@/lib/data";
 import { useFavorites } from "@/components/FavoritesProvider";
 import Morph from "./Morph";
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 
-/* Compact "3XS–6XL" style range from the sizes actually in stock. */
-function sizeRange(sizes: Size[]) {
+/* Compact "S–XXL" style range from the sizes actually in stock. */
+function sizeRange(product: CatalogProduct) {
+  if (product.freeSize) return "Free Size";
+  const sizes = product.sizes;
   if (!sizes.length) return "—";
   const idx = sizes.map((s) => SIZE_LADDER.indexOf(s)).sort((a, b) => a - b);
   const lo = SIZE_LADDER[idx[0]];
@@ -24,7 +26,8 @@ export default function ShopProductCard({ product }: { product: CatalogProduct }
   const fav = isFavorite(product.slug);
   const [pop, setPop] = useState(false);
   const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
-  const low = product.stock <= 5;
+  const soldOut = product.stock <= 0;
+  const low = !soldOut && product.stock <= 5;
 
   const onWish = (e: MouseEvent) => {
     e.preventDefault(); // don't follow the card's link
@@ -34,23 +37,22 @@ export default function ShopProductCard({ product }: { product: CatalogProduct }
 
   return (
     <div className="group relative">
-      {/* The whole card box lifts gently above its neighbours on hover. Kept
-          subtle (1.08×) and without persistent `will-change` so scrolling a grid
-          of cards stays smooth. Tailwind v4 `scale-*` sets the CSS `scale`
-          property, which the `transition-transform` utility animates. */}
-      <div className="relative origin-center transition-transform duration-300 ease-out group-hover:z-20 group-hover:scale-[1.08]">
+      {/* The card lifts gently above its neighbours on hover. Kept subtle so a
+          dense grid of cards stays smooth while scrolling. */}
+      <div className="relative origin-center transition-transform duration-300 ease-out group-hover:z-20 group-hover:scale-[1.05]">
         <Link href={product.href} className="block">
-          {/* Image frame — this is the element that morphs into the detail hero */}
+          {/* Image frame — this element morphs into the detail hero. Squarer
+              corners (rounded-md) for a crisper, more editorial look. */}
           <Morph name={`product-${product.slug}`}>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-taupe-soft shadow-sm">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-taupe-soft">
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 22vw"
-                className="object-cover"
+                className={`object-cover ${soldOut ? "opacity-60" : ""}`}
               />
-              {product.hoverImage && (
+              {product.hoverImage && !soldOut && (
                 <Image
                   src={product.hoverImage}
                   alt=""
@@ -60,12 +62,18 @@ export default function ShopProductCard({ product }: { product: CatalogProduct }
                 />
               )}
 
-              {off > 0 && (
-                <span className="absolute left-2.5 top-2.5 rounded-full bg-burgundy px-2 py-0.5 font-nav text-[10px] font-semibold tracking-[0.06em] text-cream">
-                  {off}% OFF
+              {soldOut ? (
+                <span className="absolute left-2.5 top-2.5 rounded-full bg-ink/70 px-2 py-0.5 font-nav text-[10px] font-semibold uppercase tracking-[0.08em] text-cream">
+                  Out of Stock
                 </span>
+              ) : (
+                off > 0 && (
+                  <span className="absolute left-2.5 top-2.5 rounded-full bg-burgundy px-2 py-0.5 font-nav text-[10px] font-semibold tracking-[0.06em] text-cream">
+                    {off}% OFF
+                  </span>
+                )
               )}
-              {product.tag && (
+              {product.tag && !soldOut && (
                 <span className="absolute bottom-2.5 left-2.5 rounded-full bg-cream-soft/95 px-2 py-0.5 font-nav text-[9px] uppercase tracking-[0.14em] text-burgundy">
                   {product.tag}
                 </span>
@@ -109,14 +117,14 @@ export default function ShopProductCard({ product }: { product: CatalogProduct }
           </div>
           <div className="mt-0.5 flex items-center justify-between gap-2">
             <span className="font-nav text-[10px] uppercase tracking-[0.12em] text-ink/45">
-              Sizes {sizeRange(product.sizes)}
+              {sizeRange(product)}
             </span>
             <span
               className={`font-nav text-[10px] uppercase tracking-[0.1em] ${
-                low ? "text-burgundy" : "text-ink/45"
+                soldOut ? "text-ink/40" : low ? "text-burgundy" : "text-ink/45"
               }`}
             >
-              {low ? `Only ${product.stock} left` : "In stock"}
+              {soldOut ? "Out of stock" : low ? `Only ${product.stock} left` : "In stock"}
             </span>
           </div>
         </div>

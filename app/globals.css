@@ -21,6 +21,7 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --animate-marquee: marquee 32s linear infinite;
+  --animate-marquee-slow: marquee 55s linear infinite;
 }
 
 @keyframes marquee {
@@ -117,6 +118,21 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .nav-underline::after {
     transition-duration: 0.01ms;
+  }
+}
+
+/* Homepage navbar auto-hide — slides the whole bar up on scroll-down and back in
+   on scroll-up (data-hidden toggled from Navbar). Transform-only = GPU-composited.
+   Only the homepage passes autoHide, so data-hidden is never "true" elsewhere. */
+.site-nav-header {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.site-nav-header[data-hidden="true"] {
+  transform: translateY(-100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-nav-header {
+    transition: none;
   }
 }
 
@@ -250,6 +266,25 @@ body {
   }
 }
 
+/* Category hero — a slow ken-burns zoom as the banner settles in (Casio-style).
+   Transform-only so it stays GPU-composited; disabled for reduced motion. */
+.cat-hero-img {
+  animation: cat-hero-zoom 7s ease-out both;
+}
+@keyframes cat-hero-zoom {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-hero-img {
+    animation: none;
+  }
+}
+
 /* ============================================================
    Shop pages — category listing + product detail
    ============================================================ */
@@ -270,6 +305,11 @@ body {
   40% {
     filter: blur(2px);
   }
+}
+/* Keep the full-page route crossfade clean — the mid-blur is only for the
+   product-image morph, not the whole-page "root" snapshot. */
+::view-transition-image-pair(root) {
+  animation-name: none;
 }
 /* Gentle crossfade for the rest of the page (the "root" snapshot) */
 ::view-transition-old(root),

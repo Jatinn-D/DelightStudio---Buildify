@@ -7,18 +7,11 @@ import { SIZE_LADDER } from "@/lib/data";
 
 /* Placeholder body measurements (inches) — client to confirm real values. */
 const CHART: Record<string, [number, number, number, number]> = {
-  "3XS": [30, 24, 33, 42],
-  "2XS": [32, 26, 35, 43],
-  XS: [34, 28, 37, 44],
-  S: [36, 30, 39, 45],
-  M: [38, 32, 41, 46],
-  L: [40, 34, 43, 46],
-  XL: [42, 36, 45, 47],
-  "2XL": [44, 38, 47, 47],
-  "3XL": [46, 40, 49, 48],
-  "4XL": [48, 42, 51, 48],
-  "5XL": [50, 44, 53, 49],
-  "6XL": [52, 46, 55, 49],
+  S: [34, 28, 37, 44],
+  M: [36, 30, 39, 45],
+  L: [38, 32, 41, 45],
+  XL: [40, 34, 43, 46],
+  XXL: [42, 36, 45, 46],
 };
 
 export default function SizeChartModal({
