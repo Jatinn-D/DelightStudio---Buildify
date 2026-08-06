@@ -195,22 +195,34 @@ export default function FavoritesDrawer({
                         )}
                       </div>
 
-                      {/* Two actions: Add to Bag (quiet) + View product */}
-                      <div className="mt-auto flex items-center gap-2 pt-3">
+                      {/* Add to Bag (quiet), then an explicit Remove + View row
+                          so removal is spelled out (the corner heart also works). */}
+                      <div className="mt-auto pt-3">
                         <button
                           type="button"
                           onClick={() => addOne(p, size)}
-                          className="flex-1 rounded-full bg-burgundy py-2 font-nav text-[11px] uppercase tracking-[0.14em] text-cream transition hover:bg-burgundy/90"
+                          className="w-full rounded-full bg-burgundy py-2 font-nav text-[11px] uppercase tracking-[0.14em] text-cream transition hover:bg-burgundy/90"
                         >
                           {added[p.slug] ? "Added ✓" : "Add to Bag"}
                         </button>
-                        <Link
-                          href={p.href}
-                          onClick={onClose}
-                          className="flex-1 rounded-full border border-taupe/60 py-2 text-center font-nav text-[11px] uppercase tracking-[0.14em] text-ink/75 transition hover:border-burgundy hover:text-burgundy"
-                        >
-                          View product
-                        </Link>
+                        <div className="mt-2 flex items-center justify-between">
+                          <button
+                            type="button"
+                            aria-label={`Remove ${p.name} from favourites`}
+                            onClick={() => removeWithAnim(p.slug)}
+                            className="flex items-center gap-1 font-nav text-[11px] uppercase tracking-[0.12em] text-ink/55 transition hover:text-burgundy"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            Remove
+                          </button>
+                          <Link
+                            href={p.href}
+                            onClick={onClose}
+                            className="font-nav text-[11px] uppercase tracking-[0.12em] text-ink/70 transition hover:text-burgundy"
+                          >
+                            View →
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>

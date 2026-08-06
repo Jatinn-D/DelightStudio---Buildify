@@ -2,6 +2,7 @@
 
 import { ReactLenis } from "lenis/react";
 import "lenis/dist/lenis.css";
+import ScrollRestorer from "./ScrollRestorer";
 
 /* Buttery-smooth page scrolling (Lenis), bound to the document root. */
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         touchMultiplier: 1.6,
       }}
     >
+      {/* Restores scroll position on browser back/forward (inside the Lenis
+          context so it can drive scroll through Lenis itself). */}
+      <ScrollRestorer />
       {children}
     </ReactLenis>
   );

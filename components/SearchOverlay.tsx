@@ -38,7 +38,9 @@ export default function SearchOverlay({
   open: boolean;
   onClose: () => void;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(""); // what's typed
+  const [submitted, setSubmitted] = useState(""); // what's actually searched
+  const [focused, setFocused] = useState(false); // drives the "Search" pill reveal
   const [recent, setRecent] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sort, setSort] = useState<SortValue>("featured");
@@ -119,10 +121,24 @@ export default function SearchOverlay({
     if (!t) return;
     persist([t, ...recent.filter((r) => r.toLowerCase() !== t.toLowerCase())].slice(0, MAX_RECENT));
   };
+  /* Run the search (only now do results appear) and record it under Recent. */
+  const runSearch = (term: string) => {
+    const t = term.trim();
+    setSubmitted(t);
+    commitSearch(t);
+  };
+  const submitCurrent = () => runSearch(query);
+  /* Picking a recent / popular term fills the box and searches it in one tap. */
+  const pickTerm = (term: string) => {
+    setQuery(term);
+    runSearch(term);
+    inputRef.current?.focus();
+  };
   const removeRecent = (term: string) => persist(recent.filter((r) => r !== term));
   const clearAll = () => persist([]);
   const clearQuery = () => {
     setQuery("");
+    setSubmitted("");
     inputRef.current?.focus();
   };
   const resetFilters = () => {
@@ -149,7 +165,10 @@ export default function SearchOverlay({
     }
   };
 
-  const q = query.trim().toLowerCase();
+  // Results follow the *submitted* term, not the live keystrokes — nothing is
+  // searched until the Search button (or Enter) fires.
+  const q = submitted.trim().toLowerCase();
+  const showPill = focused || query.length > 0;
   let results = catalog.filter((p) => {
     if (q && !p.name.toLowerCase().includes(q)) return false;
     if (category !== "all" && p.category !== category) return false;
@@ -196,18 +215,29 @@ export default function SearchOverlay({
         {/* Sticky search header (raised above the body so the popover overlays it) */}
         <div className="relative z-30 shrink-0 border-b border-taupe/30 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex flex-1 items-center gap-2.5 rounded-full border border-taupe/50 bg-cream px-4 py-2.5 transition-colors focus-within:border-burgundy">
-              <Search className="h-5 w-5 shrink-0 text-burgundy" />
+            <div className="flex flex-1 items-center rounded-full border border-taupe/50 bg-cream py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-burgundy">
+              {/* Leading magnifier — collapses away once you start typing so the
+                  text runs from the very start of the bar */}
+              <span
+                aria-hidden
+                className={`grid shrink-0 place-items-center overflow-hidden text-burgundy transition-all duration-300 ${
+                  query ? "w-0 opacity-0" : "mr-2.5 w-5 opacity-100"
+                }`}
+              >
+                <Search className="h-5 w-5" />
+              </span>
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") commitSearch(query);
+                  if (e.key === "Enter") submitCurrent();
                 }}
                 placeholder="Search for sarees, kurtis…"
                 aria-label="Search products"
-                className="w-full bg-transparent font-sans text-base text-ink placeholder:text-ink/40 focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent font-sans text-base text-ink placeholder:text-ink/40 focus:outline-none"
               />
               {/* Clear the typed text — only shown when there is any */}
               {query && (
@@ -220,6 +250,23 @@ export default function SearchOverlay({
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
+              {/* "Search" pill — sweeps in when the bar is focused; runs the
+                  search on click. Pill shape mirrors the bar's oval ends. */}
+              <div
+                className={`shrink-0 overflow-hidden transition-all duration-300 ease-out ${
+                  showPill ? "ml-2 max-w-[9rem] opacity-100" : "max-w-0 opacity-0"
+                }`}
+              >
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()} // keep input focus
+                  onClick={submitCurrent}
+                  className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-burgundy px-4 py-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-cream transition hover:bg-burgundy/90"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  Search
+                </button>
+              </div>
             </div>
 
             {/* Filter & sort — toggles the popover below */}
@@ -391,7 +438,7 @@ export default function SearchOverlay({
                   >
                     <button
                       type="button"
-                      onClick={() => setQuery(term)}
+                      onClick={() => pickTerm(term)}
                       className="font-sans text-ink/80 transition group-hover:text-burgundy"
                     >
                       {term}
@@ -421,7 +468,7 @@ export default function SearchOverlay({
                   <button
                     key={term}
                     type="button"
-                    onClick={() => setQuery(term)}
+                    onClick={() => pickTerm(term)}
                     className="rounded-full bg-taupe-soft/70 px-3.5 py-1.5 font-sans text-sm text-ink/75 transition hover:bg-burgundy hover:text-cream"
                   >
                     {term}
@@ -444,7 +491,7 @@ export default function SearchOverlay({
                   key={p.slug}
                   href={p.href}
                   onClick={() => {
-                    commitSearch(query);
+                    commitSearch(submitted);
                     closeSearch();
                   }}
                   className="group flex flex-col"
@@ -479,7 +526,7 @@ export default function SearchOverlay({
             <div className="flex flex-col items-center gap-2 py-10 text-center">
               <Search className="h-6 w-6 text-taupe" />
               <p className="font-sans text-sm text-ink/60">
-                No products match{q ? <> &ldquo;{query.trim()}&rdquo;</> : " these filters"}. Try
+                No products match{q ? <> &ldquo;{submitted.trim()}&rdquo;</> : " these filters"}. Try
                 adjusting your {filtersActive > 0 && !q ? "filters" : "search"}.
               </p>
             </div>

@@ -33,10 +33,14 @@ export default function Navbar({
   const { count: wishCount, setOpen: setFavOpen } = useFavorites();
   const lenis = useLenis();
 
-  // "Contact Us" (mobile menu) → close the drawer, then scroll to the footer.
+  // Mobile menu shortcuts → close the drawer, then smooth-scroll to the section.
   const goToContact = () => {
     setMobileOpen(false);
     requestAnimationFrame(() => lenis?.scrollTo("#contact", { offset: -80 }));
+  };
+  const goToWhy = () => {
+    setMobileOpen(false);
+    requestAnimationFrame(() => lenis?.scrollTo("#why", { offset: -80 }));
   };
 
   // Toggle the solid (scrolled) vs transparent (over-hero) treatment.
@@ -152,30 +156,37 @@ export default function Navbar({
             <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/45 via-black/15 to-transparent" />
           )}
 
-          {/* Single row — brand left · links centered · icons right */}
+          {/* Single row. Desktop: brand left · links centered · icons right.
+              Mobile: hamburger left · brand centered · icons right. */}
           <div className="relative mx-auto max-w-360 px-4 sm:px-6">
-            <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">
-              {/* Left — hamburger (mobile) + wordmark */}
-              <div className="flex items-center gap-2 justify-self-start">
+            <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+              {/* Left — hamburger (mobile) · wordmark (desktop) */}
+              <div className="flex items-center justify-self-start">
                 <button
                   aria-label="Open menu"
                   onClick={() => setMobileOpen(true)}
                   className={`${iconBtn} lg:hidden`}
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-4.5 w-4.5" />
                 </button>
                 <Link
                   href="/"
-                  className="whitespace-nowrap font-display text-lg font-semibold tracking-[0.2em] sm:text-xl"
+                  className="hidden whitespace-nowrap font-display text-lg font-semibold tracking-[0.2em] sm:text-xl lg:block"
                 >
                   {brand.wordmark}
                 </Link>
               </div>
 
-              {/* Center — category links (desktop) */}
-              <ul className="hidden items-center gap-7 justify-self-center lg:flex xl:gap-9">
-                {navItems}
-              </ul>
+              {/* Center — wordmark (mobile) · category links (desktop) */}
+              <div className="justify-self-center">
+                <Link
+                  href="/"
+                  className="block whitespace-nowrap font-display text-xl font-semibold tracking-[0.14em] lg:hidden"
+                >
+                  {brand.wordmark}
+                </Link>
+                <ul className="hidden items-center gap-7 lg:flex xl:gap-9">{navItems}</ul>
+              </div>
 
               {/* Right — utility icons */}
               <div className="flex items-center gap-1 justify-self-end sm:gap-2">{iconCluster}</div>
@@ -323,19 +334,27 @@ export default function Navbar({
                     )}
                   </li>
                 ))}
-
-                {/* Contact Us — scrolls to the footer contact block */}
-                <li className="py-1">
-                  <button
-                    type="button"
-                    onClick={goToContact}
-                    className="w-full py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
-                  >
-                    Contact Us
-                  </button>
-                </li>
               </ul>
             </nav>
+
+            {/* Pinned at the bottom — Why Choose Us (top), Contact Us (below);
+                each closes the drawer and scrolls to its section. */}
+            <div className="mt-auto shrink-0 border-t border-taupe/40 px-4 py-2">
+              <button
+                type="button"
+                onClick={goToWhy}
+                className="w-full py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+              >
+                Why Choose Us
+              </button>
+              <button
+                type="button"
+                onClick={goToContact}
+                className="w-full border-t border-taupe/30 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+              >
+                Contact Us
+              </button>
+            </div>
           </aside>
         </div>
       </header>

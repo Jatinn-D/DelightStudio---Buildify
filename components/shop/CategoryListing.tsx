@@ -261,13 +261,13 @@ function FilterSections({
 
 /* Clear / Show-results actions (kept: explicit Apply flow). */
 function FilterActions({
-  activeCount,
+  clearDisabled,
   applyDisabled,
   pendingCount,
   onApply,
   onClear,
 }: {
-  activeCount: number;
+  clearDisabled: boolean;
   applyDisabled: boolean;
   pendingCount: number;
   onApply: () => void;
@@ -278,7 +278,7 @@ function FilterActions({
       <button
         type="button"
         onClick={onClear}
-        disabled={activeCount === 0}
+        disabled={clearDisabled}
         className="rounded-full border border-taupe/60 px-5 py-3 font-nav text-[12px] uppercase tracking-[0.14em] text-ink transition hover:border-burgundy hover:text-burgundy disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-taupe/60 disabled:hover:text-ink"
       >
         Clear
@@ -348,6 +348,9 @@ export default function CategoryListing({
     (applied.sort !== "featured" ? 1 : 0);
 
   const applyDisabled = sameFilters(pending, applied);
+  // Clear is available the moment anything is chosen — whether it's already
+  // applied or just a pending selection waiting on "Apply".
+  const clearDisabled = sameFilters(pending, defaults) && sameFilters(applied, defaults);
 
   const onApply = () => {
     setApplied(pending);
@@ -359,7 +362,7 @@ export default function CategoryListing({
   };
 
   const sectionProps = { facetTypes, showSizes, pending, setPending, bounds };
-  const actionProps = { activeCount, applyDisabled, pendingCount, onApply, onClear };
+  const actionProps = { clearDisabled, applyDisabled, pendingCount, onApply, onClear };
 
   return (
     <div

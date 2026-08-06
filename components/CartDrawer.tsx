@@ -5,20 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, X, Minus, Plus, Trash2 } from "lucide-react";
 import { useLenis } from "lenis/react";
-import { newArrivals, type Product } from "@/lib/data";
+import type { Product } from "@/lib/data";
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 
 export type CartLine = { product: Product; qty: number; size?: string };
-
-/* Seeded so the drawer looks real on first open (matches the bag badge). */
-export const initialCart: CartLine[] = [
-  { product: newArrivals[0], qty: 1 }, // Scarlet Evening Gown
-  { product: newArrivals[1], qty: 1 }, // Rosa Floral Flared Gown
-  { product: newArrivals[2], qty: 2 }, // Ivory Shirt & Denim Set
-  { product: newArrivals[3], qty: 1 }, // Monochrome Blouse & Skirt
-  { product: newArrivals[4], qty: 1 }, // Sunlit Summer Dress
-];
 
 export default function CartDrawer({
   open,
