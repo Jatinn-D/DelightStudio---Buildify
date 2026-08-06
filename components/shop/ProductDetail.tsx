@@ -93,9 +93,9 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
   };
 
   return (
-    <div className="mx-auto max-w-360 px-4 pb-20 pt-24 sm:px-6 lg:px-10 lg:pt-28">
+    <div className="mx-auto max-w-360 px-4 pb-20 pt-24 sm:px-6 lg:px-10 lg:pt-24">
       {/* Breadcrumb */}
-      <nav className="mb-6 mt-2 flex flex-wrap items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-ink/45">
+      <nav className="mb-3 mt-3 flex flex-wrap items-center gap-1.5 font-nav text-[11px] uppercase tracking-[0.14em] text-ink/45">
         <Link href="/" className="transition-colors hover:text-burgundy">
           Home
         </Link>

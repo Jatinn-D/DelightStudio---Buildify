@@ -8,7 +8,7 @@ import Image from "next/image";
  */
 export default function Hero() {
   return (
-    <section className="relative h-[100svh] w-full overflow-hidden bg-burgundy-900">
+    <section className="relative h-svh w-full overflow-hidden bg-burgundy-900">
       <Image
         src="/images/hero.jpg"
         alt="Delight Studio — latest women's collection"
@@ -22,8 +22,6 @@ export default function Hero() {
       {/* Subtle scroll cue */}
       <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
         <div className="flex flex-col items-center gap-2 text-cream/80">
-          <span className="font-nav text-[10px] uppercase tracking-[0.3em]">Scroll</span>
-          <span className="h-9 w-px animate-pulse bg-cream/60" />
         </div>
       </div>
     </section>

@@ -364,7 +364,7 @@ export default function CategoryListing({
   return (
     <div
       className={`mx-auto max-w-360 px-4 pb-20 sm:px-6 lg:px-10 ${
-        withHero ? "pt-2 lg:pt-3" : "pt-24 lg:pt-28"
+        withHero ? "pt-2 lg:pt-2" : "pt-24 lg:pt-24"
       }`}
     >
       {/* Breadcrumb + style count — a sticky bar that stays pinned under the
