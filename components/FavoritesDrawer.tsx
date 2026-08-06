@@ -5,15 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
 import { useLenis } from "lenis/react";
-import { getCatalogProduct } from "@/lib/data";
+import { getCatalogProduct, type CatalogProduct } from "@/lib/data";
 import { useCart } from "./CartProvider";
+import type { Favorite } from "./FavoritesProvider";
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 
 /* Wishlist drawer — the favourites twin of CartDrawer. Same slide-in shell
    (`.cart-panel`), same Lenis pause / Esc-to-close, themed to match. Favourites
    are a *saved* list, independent of the bag: "Add to Bag" is a quiet add that
-   keeps the item here; the only way an item leaves is its heart. */
+   keeps the item here; the only way an item leaves is its heart. Each favourite
+   carries the size the customer picked (if any), shown and passed on to the bag. */
 export default function FavoritesDrawer({
   open,
   onClose,
@@ -22,7 +24,7 @@ export default function FavoritesDrawer({
 }: {
   open: boolean;
   onClose: () => void;
-  favorites: string[];
+  favorites: Favorite[];
   onRemove: (slug: string) => void;
 }) {
   const lenis = useLenis();
@@ -51,10 +53,11 @@ export default function FavoritesDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  // Resolve saved slugs → catalogue products (drop any that no longer exist).
-  const products = favorites
-    .map((slug) => getCatalogProduct(slug))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+  // Resolve saved favourites → catalogue products (drop any that no longer exist),
+  // keeping the size the customer had chosen.
+  const items = favorites
+    .map((f) => ({ p: getCatalogProduct(f.slug), size: f.size }))
+    .filter((x): x is { p: CatalogProduct; size: string | undefined } => Boolean(x.p));
 
   // Let the row collapse (CSS) before it actually leaves the list.
   const removeWithAnim = (slug: string) => {
@@ -74,17 +77,15 @@ export default function FavoritesDrawer({
     window.setTimeout(() => setAdded((a) => ({ ...a, [slug]: false })), 1500);
   };
 
-  // Quiet add — keep the favourites drawer open so several can be added in a row.
-  const addOne = (slug: string) => {
-    const p = getCatalogProduct(slug);
-    if (!p) return;
-    addItem(p, 1, undefined, false);
-    flashAdded(slug);
+  // Quiet add (keeps the drawer open) — carry the saved size into the bag.
+  const addOne = (p: CatalogProduct, size?: string) => {
+    addItem(p, 1, size, false);
+    flashAdded(p.slug);
   };
 
   // Bulk add, then hand off to the bag so the result is visible.
   const addAll = () => {
-    products.forEach((p) => addItem(p, 1, undefined, false));
+    items.forEach(({ p, size }) => addItem(p, 1, size, false));
     onClose();
     setCartOpen(true);
   };
@@ -116,7 +117,7 @@ export default function FavoritesDrawer({
         <div className="flex items-center justify-between border-b border-taupe/30 px-5 py-4 sm:px-6">
           <div className="flex items-baseline gap-2">
             <h2 className="font-display text-xl font-semibold tracking-[0.06em]">Your Favourites</h2>
-            <span className="font-sans text-sm text-ink/50">{products.length} saved</span>
+            <span className="font-sans text-sm text-ink/50">{items.length} saved</span>
           </div>
           <button
             type="button"
@@ -128,11 +129,11 @@ export default function FavoritesDrawer({
           </button>
         </div>
 
-        {products.length > 0 ? (
+        {items.length > 0 ? (
           <>
             {/* Saved items */}
             <ul data-lenis-prevent className="flex-1 overflow-y-auto px-5 sm:px-6">
-              {products.map((p) => (
+              {items.map(({ p, size }) => (
                 <li
                   key={p.slug}
                   data-exiting={exiting[p.slug] ? "true" : "false"}
@@ -159,6 +160,18 @@ export default function FavoritesDrawer({
                           </Link>
                           <p className="mt-0.5 font-nav text-[10px] uppercase tracking-[0.16em] text-ink/40">
                             {p.category}
+                            {size && (
+                              <span className="text-ink/60">
+                                {" · "}
+                                {size === "Free Size" ? (
+                                  <span className="font-medium text-burgundy">Free Size</span>
+                                ) : (
+                                  <>
+                                    Size <span className="font-medium text-burgundy">{size}</span>
+                                  </>
+                                )}
+                              </span>
+                            )}
                           </p>
                         </div>
                         <button
@@ -186,7 +199,7 @@ export default function FavoritesDrawer({
                       <div className="mt-auto flex items-center gap-2 pt-3">
                         <button
                           type="button"
-                          onClick={() => addOne(p.slug)}
+                          onClick={() => addOne(p, size)}
                           className="flex-1 rounded-full bg-burgundy py-2 font-nav text-[11px] uppercase tracking-[0.14em] text-cream transition hover:bg-burgundy/90"
                         >
                           {added[p.slug] ? "Added ✓" : "Add to Bag"}

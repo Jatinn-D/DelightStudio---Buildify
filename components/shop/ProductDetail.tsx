@@ -24,6 +24,7 @@ import {
   type Size,
 } from "@/lib/data";
 import { useCart } from "@/components/CartProvider";
+import { useFavorites } from "@/components/FavoritesProvider";
 import Morph from "./Morph";
 import ShopProductCard from "./ShopProductCard";
 import SizeChartModal from "./SizeChartModal";
@@ -96,7 +97,8 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
   const [qty, setQty] = useState(1);
   const [needSize, setNeedSize] = useState(false);
   const [chartOpen, setChartOpen] = useState(false);
-  const [wished, setWished] = useState(false);
+  const { isFavorite, toggle: toggleFav } = useFavorites();
+  const fav = isFavorite(product.slug);
 
   const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   const inStock = new Set<Size>(product.sizes);
@@ -378,11 +380,18 @@ export default function ProductDetail({ product }: { product: CatalogProduct }) 
 
             <button
               type="button"
-              aria-label="Add to wishlist"
-              onClick={() => setWished((w) => !w)}
-              className="grid h-13 w-13 shrink-0 place-items-center rounded-full border border-taupe/50 text-ink transition hover:border-burgundy hover:text-burgundy"
+              aria-label={fav ? "Remove from wishlist" : "Add to wishlist"}
+              aria-pressed={fav}
+              onClick={() =>
+                toggleFav(product.slug, product.freeSize ? "Free Size" : (size ?? undefined))
+              }
+              className={`grid h-13 w-13 shrink-0 place-items-center rounded-full border transition ${
+                fav
+                  ? "border-burgundy text-burgundy"
+                  : "border-taupe/50 text-ink hover:border-burgundy hover:text-burgundy"
+              }`}
             >
-              <Heart className={`h-5 w-5 ${wished ? "fill-burgundy text-burgundy" : ""}`} />
+              <Heart className={`h-5 w-5 ${fav ? "fill-burgundy text-burgundy" : ""}`} />
             </button>
           </div>
 
