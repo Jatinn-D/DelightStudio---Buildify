@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus, Sparkles, Phone } from "lucide-react";
 import { useLenis } from "lenis/react";
 import { navCategories, brand } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
@@ -346,15 +346,17 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={goToWhy}
-                className="w-full py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+                className="flex w-full items-center gap-3 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
               >
+                <Sparkles className="h-4.5 w-4.5 shrink-0" strokeWidth={1.5} />
                 Why Choose Us
               </button>
               <button
                 type="button"
                 onClick={goToContact}
-                className="w-full border-t border-taupe/30 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+                className="flex w-full items-center gap-3 border-t border-taupe/30 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
               >
+                <Phone className="h-4.5 w-4.5 shrink-0" strokeWidth={1.5} />
                 Contact Us
               </button>
             </div>
