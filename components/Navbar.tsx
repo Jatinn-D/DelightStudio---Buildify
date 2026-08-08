@@ -77,8 +77,11 @@ export default function Navbar({
   }, [mobileOpen]);
 
   const solid = scrolled || openMenu !== null || forceSolid;
+  // Icon buttons run a touch smaller on phones so the left/right clusters stay
+  // narrow — the [1fr auto 1fr] grid then pads the centered wordmark on both
+  // sides (icons no longer hug the brand). Full size returns at ≥sm.
   const iconBtn =
-    "grid h-9 w-9 place-items-center rounded-full transition hover:opacity-60";
+    "grid h-8 w-8 place-items-center rounded-full transition hover:opacity-60 sm:h-9 sm:w-9";
 
   // Utility icons — shared cluster.
   const iconCluster = (
@@ -158,8 +161,8 @@ export default function Navbar({
 
           {/* Single row. Desktop: brand left · links centered · icons right.
               Mobile: hamburger left · brand centered · icons right. */}
-          <div className="relative mx-auto max-w-360 px-4 sm:px-6">
-            <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+          <div className="relative mx-auto max-w-360 px-2 sm:px-6">
+            <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-4">
               {/* Left — hamburger (mobile) · wordmark (desktop) */}
               <div className="flex items-center justify-self-start">
                 <button
@@ -178,18 +181,18 @@ export default function Navbar({
               </div>
 
               {/* Center — wordmark (mobile) · category links (desktop) */}
-              <div className="justify-self-center">
+              <div className="justify-self-center pr-2 lg:pr-0">
                 <Link
                   href="/"
-                  className="block whitespace-nowrap font-display text-xl font-semibold tracking-[0.14em] lg:hidden"
+                  className="block whitespace-nowrap font-display text-[22px] font-semibold tracking-[0.14em] lg:hidden"
                 >
                   {brand.wordmark}
                 </Link>
                 <ul className="hidden items-center gap-7 lg:flex xl:gap-9">{navItems}</ul>
               </div>
 
-              {/* Right — utility icons */}
-              <div className="flex items-center gap-1 justify-self-end sm:gap-2">{iconCluster}</div>
+              {/* Right — utility icons (even gap so they breathe, not touch) */}
+              <div className="flex items-center gap-0.01 justify-self-end sm:gap-2">{iconCluster}</div>
             </div>
           </div>
         </div>
