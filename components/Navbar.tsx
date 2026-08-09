@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus, Sparkles, Phone } from "lucide-react";
 import { useLenis } from "lenis/react";
-import { navCategories, brand } from "@/lib/data";
+import { navCategories, brand, type NavCategory } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
 import { useCart } from "./CartProvider";
@@ -27,6 +27,7 @@ export default function Navbar({
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
+  const [mobileSubSection, setMobileSubSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const { count: cartCount, setOpen: setCartOpen } = useCart();
@@ -93,7 +94,7 @@ export default function Navbar({
       >
         <Search className="h-4.5 w-4.5" />
       </button>
-      <Link href="/login" aria-label="Account" className={iconBtn}>
+      <Link href="/login" aria-label="Account" className={`${iconBtn} hidden lg:grid`}>
         <User className="h-4.5 w-4.5" />
       </Link>
       <button
@@ -137,6 +138,65 @@ export default function Navbar({
     </li>
   ));
 
+  // Mobile drawer: "New" sits alone at the top; the four "main" categories
+  // (Sarees · Ethnicwear · Western · Innerwear) appear both inside the
+  // "All Categories" accordion and as standalone links below it.
+  const newCat = navCategories.find((c) => c.label === "New");
+  const otherCats = navCategories.filter((c) => c.label !== "New");
+
+  // One drawer row: a plain link, or link + Plus accordion for grouped cats.
+  const renderMobileCat = (cat: NavCategory) => (
+    <li key={cat.label} className="py-1">
+      <div className="flex items-center justify-between">
+        <Link
+          href={cat.href}
+          onClick={() => setMobileOpen(false)}
+          className="flex-1 py-3 font-nav text-sm uppercase tracking-[0.14em]"
+        >
+          {cat.label}
+        </Link>
+        {cat.columns && (
+          <button
+            aria-label={`Toggle ${cat.label}`}
+            onClick={() => setMobileSection((s) => (s === cat.label ? null : cat.label))}
+            className="grid h-9 w-9 place-items-center"
+          >
+            <Plus
+              className={`h-4 w-4 transition-transform ${
+                mobileSection === cat.label ? "rotate-45" : ""
+              }`}
+            />
+          </button>
+        )}
+      </div>
+      {cat.columns && (
+        <div
+          className={`grid transition-all duration-300 ease-out motion-reduce:transition-none ${
+            mobileSection === cat.label ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-3 pl-1">
+              {cat.columns.flatMap((col) =>
+                col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link
+                      href={l.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="block py-1.5 font-display text-base text-ink/75"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                )),
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+
   return (
     <>
       <header
@@ -162,7 +222,7 @@ export default function Navbar({
           {/* Single row. Desktop: brand left · links centered · icons right.
               Mobile: hamburger left · brand centered · icons right. */}
           <div className="relative mx-auto max-w-360 px-2 sm:px-6">
-            <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-4">
+            <div className="grid h-16 grid-cols-[0.7fr_auto_1fr] items-center gap-4 sm:gap-4">
               {/* Left — hamburger (mobile) · wordmark (desktop) */}
               <div className="flex items-center justify-self-start">
                 <button
@@ -181,7 +241,7 @@ export default function Navbar({
               </div>
 
               {/* Center — wordmark (mobile) · category links (desktop) */}
-              <div className="justify-self-center pr-2 lg:pr-0">
+              <div className="justify-self-center">
                 <Link
                   href="/"
                   className="block whitespace-nowrap font-display text-[22px] font-semibold tracking-[0.14em] lg:hidden"
@@ -192,7 +252,7 @@ export default function Navbar({
               </div>
 
               {/* Right — utility icons (even gap so they breathe, not touch) */}
-              <div className="flex items-center gap-0.01 justify-self-end sm:gap-2">{iconCluster}</div>
+              <div className="flex items-center gap-0.5 justify-self-end sm:gap-2">{iconCluster}</div>
             </div>
           </div>
         </div>
@@ -281,72 +341,141 @@ export default function Navbar({
 
             <nav className="flex-1 overflow-y-auto px-4 py-2">
               <ul className="divide-y divide-taupe/30">
-                {navCategories.map((cat) => (
-                  <li key={cat.label} className="py-1">
-                    <div className="flex items-center justify-between">
-                      <Link
-                        href={cat.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex-1 py-3 font-nav text-sm uppercase tracking-[0.14em]"
-                      >
-                        {cat.label}
-                      </Link>
-                      {cat.columns && (
-                        <button
-                          aria-label={`Toggle ${cat.label}`}
-                          onClick={() =>
-                            setMobileSection((s) => (s === cat.label ? null : cat.label))
-                          }
-                          className="grid h-9 w-9 place-items-center"
-                        >
-                          <Plus
-                            className={`h-4 w-4 transition-transform ${
-                              mobileSection === cat.label ? "rotate-45" : ""
-                            }`}
-                          />
-                        </button>
-                      )}
-                    </div>
-                    {cat.columns && (
-                      /* Smooth open/close via grid-rows 0fr → 1fr + fade */
-                      <div
-                        className={`grid transition-all duration-300 ease-out motion-reduce:transition-none ${
-                          mobileSection === cat.label
-                            ? "grid-rows-[1fr] opacity-100"
-                            : "grid-rows-[0fr] opacity-0"
+                {/* New — only the tagged new-arrival items */}
+                {newCat && renderMobileCat(newCat)}
+
+                {/* All Products — the entire store (/shop/all) */}
+                <li className="py-1">
+                  <Link
+                    href="/shop/all"
+                    onClick={() => setMobileOpen(false)}
+                    className="block py-3 font-nav text-sm uppercase tracking-[0.14em]"
+                  >
+                    All Products
+                  </Link>
+                </li>
+
+                {/* All Categories — accordion of the 4 mains; Ethnicwear &
+                    Western nest one level further into their subcategories */}
+                <li className="py-1">
+                  <button
+                    type="button"
+                    aria-expanded={mobileSection === "All Categories"}
+                    onClick={() =>
+                      setMobileSection((s) => (s === "All Categories" ? null : "All Categories"))
+                    }
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <span className="flex-1 py-3 font-nav text-sm uppercase tracking-[0.14em]">
+                      All Categories
+                    </span>
+                    <span className="grid h-9 w-9 place-items-center">
+                      <Plus
+                        className={`h-4 w-4 transition-transform ${
+                          mobileSection === "All Categories" ? "rotate-45" : ""
                         }`}
-                      >
-                        <div className="overflow-hidden">
-                          <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-3 pl-1">
-                            {cat.columns.flatMap((col) =>
-                              col.links.map((l) => (
-                                <li key={l.label}>
+                      />
+                    </span>
+                  </button>
+                  <div
+                    className={`grid transition-all duration-300 ease-out motion-reduce:transition-none ${
+                      mobileSection === "All Categories"
+                        ? "grid-rows-[1fr] opacity-100"
+                        : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <ul className="pl-1">
+                        {otherCats.map((cat) => (
+                          <li key={cat.label}>
+                            {cat.columns ? (
+                              <>
+                                <div className="flex items-center justify-between">
                                   <Link
-                                    href={l.href}
+                                    href={cat.href}
                                     onClick={() => setMobileOpen(false)}
-                                    className="block py-1.5 font-display text-base text-ink/75"
+                                    className="flex-1 py-2.5 font-display text-base text-ink/80"
                                   >
-                                    {l.label}
+                                    {cat.label}
                                   </Link>
-                                </li>
-                              ))
+                                  <button
+                                    aria-label={`Toggle ${cat.label}`}
+                                    onClick={() =>
+                                      setMobileSubSection((s) =>
+                                        s === cat.label ? null : cat.label,
+                                      )
+                                    }
+                                    className="grid h-8 w-8 place-items-center"
+                                  >
+                                    <Plus
+                                      className={`h-3.5 w-3.5 transition-transform ${
+                                        mobileSubSection === cat.label ? "rotate-45" : ""
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+                                <div
+                                  className={`grid transition-all duration-300 ease-out motion-reduce:transition-none ${
+                                    mobileSubSection === cat.label
+                                      ? "grid-rows-[1fr] opacity-100"
+                                      : "grid-rows-[0fr] opacity-0"
+                                  }`}
+                                >
+                                  <div className="overflow-hidden">
+                                    <ul className="grid grid-cols-2 gap-x-4 gap-y-1 pb-2 pl-3">
+                                      {cat.columns.flatMap((col) =>
+                                        col.links.map((l) => (
+                                          <li key={l.label}>
+                                            <Link
+                                              href={l.href}
+                                              onClick={() => setMobileOpen(false)}
+                                              className="block py-1.5 font-display text-sm text-ink/70"
+                                            >
+                                              {l.label}
+                                            </Link>
+                                          </li>
+                                        )),
+                                      )}
+                                    </ul>
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <Link
+                                href={cat.href}
+                                onClick={() => setMobileOpen(false)}
+                                className="block py-2.5 font-display text-base text-ink/80"
+                              >
+                                {cat.label}
+                              </Link>
                             )}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                ))}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </li>
+
+                {/* Existing standalone category links */}
+                {otherCats.map((cat) => renderMobileCat(cat))}
               </ul>
             </nav>
 
-            {/* Pinned at the bottom — Why Choose Us (top), Contact Us (below);
-                each closes the drawer and scrolls to its section. */}
+            {/* Pinned at the bottom — My Account (link) sits above Why Choose Us
+                and Contact Us (which close the drawer and scroll to their sections). */}
             <div className="mt-auto shrink-0 border-t border-taupe/40 px-4 py-2">
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex w-full items-center gap-3 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+              >
+                <User className="h-4.5 w-4.5 shrink-0" strokeWidth={1.5} />
+                My Account
+              </Link>
               <button
                 type="button"
                 onClick={goToWhy}
-                className="flex w-full items-center gap-3 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
+                className="flex w-full items-center gap-3 border-t border-taupe/30 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
               >
                 <Sparkles className="h-4.5 w-4.5 shrink-0" strokeWidth={1.5} />
                 Why Choose Us

@@ -87,7 +87,7 @@ export const categories: Category[] = [
   { name: "Piece Sets", href: "/shop/piece-sets", image: "/images/cat-kurta-sets.jpg" },
   { name: "Pants & Jeans", href: "/shop/pants", image: "/images/cat-bottomwear.jpg" },
   { name: "Tops & Dresses", href: "/shop/tops", image: "/images/cat-skirt-sets.jpg" },
-  { name: "Shop All", href: "/shop/new", image: "/images/cat-shop-all.jpg" },
+  { name: "Shop All", href: "/shop/all", image: "/images/cat-shop-all.jpg" },
   { name: "Innerwear", href: "/shop/innerwear", image: "/images/cat-nighty.jpg", span: "wide" },
 ];
 
@@ -239,6 +239,25 @@ export const shopCategories: ShopCategory[] = [
     ],
   },
   {
+    slug: "all",
+    label: "All Products",
+    eyebrow: "The Full Collection",
+    title: "All Products",
+    subtitle:
+      "Every piece in the Delight Studio wardrobe — sarees, kurtis, anarkalis, sets, western and innerwear, all in one place.",
+    image: "/images/hero.jpg",
+    categories: [
+      "Sarees",
+      "Kurti",
+      "Anarkali",
+      "Ethnic Set",
+      "Piece Set",
+      "Western",
+      "Pants",
+      "Innerwear",
+    ],
+  },
+  {
     slug: "sarees",
     label: "Sarees",
     eyebrow: "The Saree Edit",
@@ -371,6 +390,13 @@ export function getShopCategory(slug: string): ShopCategory | undefined {
 export function productsForShop(slug: string): CatalogProduct[] {
   const cfg = getShopCategory(slug);
   if (!cfg) return [];
+  // "New" lists only the tagged new-arrival items (the whole store lives under
+  // /shop/all), preserving the NEW_ARRIVAL_SLUGS order.
+  if (slug === "new") {
+    return NEW_ARRIVAL_SLUGS.map((s) => getCatalogProduct(s)).filter(
+      (p): p is CatalogProduct => Boolean(p),
+    );
+  }
   const set = new Set(cfg.categories);
   return catalog.filter((p) => set.has(p.category));
 }
