@@ -124,25 +124,35 @@ export default function Navbar({
     </>
   );
 
-  // Category links — centered list.
-  const navItems = navCategories.map((cat) => (
+  // One desktop nav item — a link, plus a chevron when it opens a mega-menu.
+  const renderDesktopItem = (cat: NavCategory) => (
     <li key={cat.label} onMouseEnter={() => setOpenMenu(cat.columns ? cat.label : null)}>
       <Link
         href={cat.href}
         onFocus={() => setOpenMenu(cat.columns ? cat.label : null)}
-        className="flex items-center gap-1 font-nav text-[12.5px] font-medium uppercase tracking-[0.16em]"
+        className="flex items-center gap-1 whitespace-nowrap font-nav text-[12px] font-medium uppercase tracking-[0.08em]"
       >
         <span className="nav-underline">{cat.label}</span>
         {cat.columns && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
       </Link>
     </li>
-  ));
+  );
 
   // Mobile drawer: "New" sits alone at the top; the four "main" categories
   // (Sarees · Ethnicwear · Western · Innerwear) appear both inside the
   // "All Categories" accordion and as standalone links below it.
   const newCat = navCategories.find((c) => c.label === "New");
   const otherCats = navCategories.filter((c) => c.label !== "New");
+
+  // Desktop "All Categories" mega-menu columns — each main category with its
+  // subcategories (or a single "all" link when it has none).
+  const allCatColumns = otherCats.map((cat) => ({
+    heading: cat.label,
+    href: cat.href,
+    links: cat.columns
+      ? cat.columns.flatMap((col) => col.links)
+      : [{ label: `All ${cat.label}`, href: cat.href }],
+  }));
 
   // One drawer row: a plain link, or link + Plus accordion for grouped cats.
   const renderMobileCat = (cat: NavCategory) => (
@@ -222,7 +232,7 @@ export default function Navbar({
           {/* Single row. Desktop: brand left · links centered · icons right.
               Mobile: hamburger left · brand centered · icons right. */}
           <div className="relative mx-auto max-w-360 px-2 sm:px-6">
-            <div className="grid h-16 grid-cols-[0.7fr_auto_1fr] items-center gap-4 sm:gap-4">
+            <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-4 lg:flex lg:justify-between lg:gap-0">
               {/* Left — hamburger (mobile) · wordmark (desktop) */}
               <div className="flex items-center justify-self-start">
                 <button
@@ -248,7 +258,28 @@ export default function Navbar({
                 >
                   {brand.wordmark}
                 </Link>
-                <ul className="hidden items-center gap-7 lg:flex xl:gap-9">{navItems}</ul>
+                <ul className="hidden items-center gap-5 lg:flex xl:gap-7">
+                  {newCat && renderDesktopItem(newCat)}
+                  <li onMouseEnter={() => setOpenMenu(null)}>
+                    <Link
+                      href="/shop/all"
+                      className="flex items-center gap-1 whitespace-nowrap font-nav text-[12px] font-medium uppercase tracking-[0.08em]"
+                    >
+                      <span className="nav-underline">All Products</span>
+                    </Link>
+                  </li>
+                  <li onMouseEnter={() => setOpenMenu("All Categories")}>
+                    <Link
+                      href="/shop/all"
+                      onFocus={() => setOpenMenu("All Categories")}
+                      className="flex items-center gap-1 whitespace-nowrap font-nav text-[12px] font-medium uppercase tracking-[0.08em]"
+                    >
+                      <span className="nav-underline">All Categories</span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                    </Link>
+                  </li>
+                  {otherCats.map((cat) => renderDesktopItem(cat))}
+                </ul>
               </div>
 
               {/* Right — utility icons (even gap so they breathe, not touch) */}
@@ -299,6 +330,42 @@ export default function Navbar({
               </div>
             </div>
           ) : null
+        )}
+
+        {/* Mega-menu panel — All Categories (every main category + its subs) */}
+        {openMenu === "All Categories" && (
+          <div
+            onMouseEnter={() => setOpenMenu("All Categories")}
+            onMouseLeave={() => setOpenMenu(null)}
+            className="absolute inset-x-0 top-full hidden border-t border-taupe/40 bg-cream-soft/98 text-ink shadow-[0_20px_40px_rgba(61,18,32,0.12)] lg:block"
+          >
+            <div className="mx-auto max-w-360 px-8 py-8">
+              <div className="grid grid-cols-4 gap-10">
+                {allCatColumns.map((col) => (
+                  <div key={col.heading}>
+                    <Link
+                      href={col.href}
+                      className="mb-3 block font-nav text-[11px] uppercase tracking-[0.2em] text-burgundy/70 transition-colors hover:text-burgundy"
+                    >
+                      {col.heading}
+                    </Link>
+                    <ul className="space-y-2.5">
+                      {col.links.map((l) => (
+                        <li key={l.label}>
+                          <Link
+                            href={l.href}
+                            className="font-display text-lg text-ink/80 transition-colors hover:text-burgundy"
+                          >
+                            {l.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Mobile drawer */}
