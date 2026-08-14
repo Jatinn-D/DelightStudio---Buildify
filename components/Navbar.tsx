@@ -260,14 +260,6 @@ export default function Navbar({
                 </Link>
                 <ul className="hidden items-center gap-5 lg:flex xl:gap-7">
                   {newCat && renderDesktopItem(newCat)}
-                  <li onMouseEnter={() => setOpenMenu(null)}>
-                    <Link
-                      href="/shop/all"
-                      className="flex items-center gap-1 whitespace-nowrap font-nav text-[12px] font-medium uppercase tracking-[0.08em]"
-                    >
-                      <span className="nav-underline">All Products</span>
-                    </Link>
-                  </li>
                   <li onMouseEnter={() => setOpenMenu("All Categories")}>
                     <Link
                       href="/shop/all"
@@ -364,6 +356,15 @@ export default function Navbar({
                   </div>
                 ))}
               </div>
+              {/* Whole-store link, pinned bottom-right of the panel */}
+              <div className="mt-8 flex justify-end">
+                <Link
+                  href="/shop/all"
+                  className="font-nav text-[12px] uppercase tracking-[0.16em] text-burgundy underline-offset-4 hover:underline"
+                >
+                  View All Products →
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -411,19 +412,9 @@ export default function Navbar({
                 {/* New — only the tagged new-arrival items */}
                 {newCat && renderMobileCat(newCat)}
 
-                {/* All Products — the entire store (/shop/all) */}
-                <li className="py-1">
-                  <Link
-                    href="/shop/all"
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-3 font-nav text-sm uppercase tracking-[0.14em]"
-                  >
-                    All Products
-                  </Link>
-                </li>
-
                 {/* All Categories — accordion of the 4 mains; Ethnicwear &
-                    Western nest one level further into their subcategories */}
+                    Western nest one level further into their subcategories.
+                    "All Products" (the entire store) sits at the very bottom. */}
                 <li className="py-1">
                   <button
                     type="button"
@@ -518,6 +509,16 @@ export default function Navbar({
                             )}
                           </li>
                         ))}
+                        {/* Whole store — pinned to the bottom of the accordion */}
+                        <li>
+                          <Link
+                            href="/shop/all"
+                            onClick={() => setMobileOpen(false)}
+                            className="block py-2.5 font-display text-base text-ink/80"
+                          >
+                            All Products
+                          </Link>
+                        </li>
                       </ul>
                     </div>
                   </div>
