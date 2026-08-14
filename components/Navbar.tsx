@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus, Sparkles, Phone } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Plus, Sparkles, Phone, ArrowRight } from "lucide-react";
 import { useLenis } from "lenis/react";
 import { navCategories, brand, type NavCategory } from "@/lib/data";
 import AnnouncementBar from "./AnnouncementBar";
@@ -514,9 +514,10 @@ export default function Navbar({
                           <Link
                             href="/shop/all"
                             onClick={() => setMobileOpen(false)}
-                            className="block py-2.5 font-display text-base text-ink/80"
+                            className="flex items-center gap-1.5 py-2.5 font-display text-base text-ink/80"
                           >
                             All Products
+                            <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                           </Link>
                         </li>
                       </ul>
