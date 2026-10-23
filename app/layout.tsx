@@ -5,6 +5,7 @@ import SmoothScroll from "@/components/SmoothScroll";
 import CartProvider from "@/components/CartProvider";
 import FavoritesProvider from "@/components/FavoritesProvider";
 import PageTransition from "@/components/PageTransition";
+import AuthProvider from "@/components/AuthProvider";
 
 // Display serif — wordmark & section headings (editorial fashion feel)
 const cormorant = Cormorant_Garamond({
@@ -46,12 +47,14 @@ export default function RootLayout({
         <SmoothScroll>
           {/* Cart is the outer provider so the Favourites drawer (mounted inside
               FavoritesProvider) can reach useCart() for its "Add to Bag" actions. */}
-          <CartProvider>
-            <FavoritesProvider>
-              {/* Crossfade every route change (product morph still composes on top) */}
-              <PageTransition>{children}</PageTransition>
-            </FavoritesProvider>
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              <FavoritesProvider>
+                {/* Crossfade every route change (product morph still composes on top) */}
+                <PageTransition>{children}</PageTransition>
+              </FavoritesProvider>
+            </CartProvider>
+          </AuthProvider>
         </SmoothScroll>
       </body>
     </html>
