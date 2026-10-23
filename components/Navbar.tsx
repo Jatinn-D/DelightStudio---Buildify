@@ -9,6 +9,7 @@ import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
 import { useCart } from "./CartProvider";
 import { useFavorites } from "./FavoritesProvider";
+import { useAuth } from "./AuthProvider";
 
 /* One navbar for every page: brand pinned left, category links centered, utility
    icons right (a 1fr / auto / 1fr grid keeps the links optically centered).
@@ -32,6 +33,8 @@ export default function Navbar({
   const [hidden, setHidden] = useState(false);
   const { count: cartCount, setOpen: setCartOpen } = useCart();
   const { count: wishCount, setOpen: setFavOpen } = useFavorites();
+  const { user } = useAuth();
+  const accountHref = user ? "/account" : "/login";
   const lenis = useLenis();
 
   // Mobile menu shortcuts → close the drawer, then smooth-scroll to the section.
@@ -94,8 +97,16 @@ export default function Navbar({
       >
         <Search className="h-4.5 w-4.5" />
       </button>
-      <Link href="/login" aria-label="Account" className={`${iconBtn} hidden lg:grid`}>
+      <Link
+        href={accountHref}
+        aria-label={user ? "My Account" : "Log in"}
+        title={user ? `My Account (${user.name.split(" ")[0]})` : "Log in"}
+        className={`${iconBtn} relative hidden lg:grid`}
+      >
         <User className="h-4.5 w-4.5" />
+        {user && (
+          <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-burgundy ring-2 ring-cream" />
+        )}
       </Link>
       <button
         aria-label="Wishlist"
@@ -534,7 +545,7 @@ export default function Navbar({
                 and Contact Us (which close the drawer and scroll to their sections). */}
             <div className="mt-auto shrink-0 border-t border-taupe/40 px-4 py-2">
               <Link
-                href="/login"
+                href={accountHref}
                 onClick={() => setMobileOpen(false)}
                 className="flex w-full items-center gap-3 py-3 text-left font-nav text-sm uppercase tracking-[0.14em]"
               >
