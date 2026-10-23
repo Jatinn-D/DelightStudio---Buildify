@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -356,10 +356,12 @@ export default function AccountDashboard() {
   const { user, ready, signOut } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("profile");
+  const signingOut = useRef(false);
 
   // Logged-out visitors go to the login page, then come back here.
+  // (Skipped when the customer has just pressed "Log out" themselves.)
   useEffect(() => {
-    if (ready && !user) router.replace("/login?next=/account");
+    if (ready && !user && !signingOut.current) router.replace("/login?next=/account");
   }, [ready, user, router]);
 
   if (!ready || !user) {
@@ -370,6 +372,7 @@ export default function AccountDashboard() {
   const since = new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
   const onSignOut = () => {
+    signingOut.current = true;
     signOut();
     router.replace("/login");
   };
